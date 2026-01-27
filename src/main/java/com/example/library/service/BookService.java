@@ -17,7 +17,7 @@ public class BookService {
 
     private final BookRepository bookRepository;
     private final BookMapper bookMapper;
-    private final FileStorageService fileStorageService; // 👈 ВОТ ОН
+    private final FileStorageService fileStorageService;
 
     public List<BookResponse> getAllBooks() {
         return bookRepository.findAll()
