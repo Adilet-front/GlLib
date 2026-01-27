@@ -58,6 +58,7 @@ public class Book {
     @Column(length = 1000)
     private String description;
 
+
     @ManyToOne
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;

@@ -6,6 +6,7 @@ import com.example.library.service.BookService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -34,9 +35,20 @@ public class BookController {
         return bookService.create(request);
     }
 
+
     @DeleteMapping("/admin/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public void delete(@PathVariable Long id) {
         bookService.delete(id);
     }
+
+    @PostMapping("/{id}/cover")
+    public BookResponse uploadCover(
+            @PathVariable Long id,
+            @RequestParam("file") MultipartFile file
+    ) {
+        return bookService.uploadCover(id, file);
+    }
+
+
 }

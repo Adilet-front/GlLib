@@ -18,3 +18,11 @@ spring:
 library:
   reservation:
     max-active: 3
+
+minio:
+  endpoint: http://localhost:9000
+  access-key: minio
+  secret-key: minio123
+  bucket: book-covers
+
+

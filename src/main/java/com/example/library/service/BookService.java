@@ -7,6 +7,7 @@ import com.example.library.mapper.BookMapper;
 import com.example.library.repository.BookRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -16,6 +17,7 @@ public class BookService {
 
     private final BookRepository bookRepository;
     private final BookMapper bookMapper;
+    private final FileStorageService fileStorageService; // 👈 ВОТ ОН
 
     public List<BookResponse> getAllBooks() {
         return bookRepository.findAll()
@@ -37,5 +39,16 @@ public class BookService {
 
     public void delete(Long id) {
         bookRepository.deleteById(id);
+    }
+
+    public BookResponse uploadCover(Long bookId, MultipartFile file) {
+
+        Book book = bookRepository.findById(bookId)
+                .orElseThrow(() -> new RuntimeException("Book not found"));
+
+        String url = fileStorageService.upload(file);
+        book.setCoverUrl(url);
+
+        return bookMapper.toResponse(bookRepository.save(book));
     }
 }
