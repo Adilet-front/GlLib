@@ -1,11 +1,17 @@
 package com.example.library.service;
 
 import com.example.library.Dto.BookCreateRequest;
+import com.example.library.Dto.BookFilterRequest;
 import com.example.library.Dto.BookResponse;
+import com.example.library.Specification.BookSpecification;
+import com.example.library.enam.BookStatus;
+import com.example.library.enam.SortDirection;
 import com.example.library.entity.Book;
 import com.example.library.mapper.BookMapper;
 import com.example.library.repository.BookRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -51,4 +57,44 @@ public class BookService {
 
         return bookMapper.toResponse(bookRepository.save(book));
     }
+
+    //28.01.26
+
+
+    public List<BookResponse> search(BookFilterRequest filter) {
+
+        Specification<Book> spec = Specification
+                .where(BookSpecification.search(filter.getSearch()))
+                .and(BookSpecification.category(filter.getCategoryId()))
+                .and(BookSpecification.status(filter.getStatus()))
+                .and(BookSpecification.author(filter.getAuthor()))
+                .and(BookSpecification.location(filter.getLocation()))
+                .and(BookSpecification.minRating(filter.getMinRating()))
+                .and(BookSpecification.tags(filter.getTags()));
+
+        return bookRepository.findAll(spec, buildSort(filter))
+                .stream()
+                .map(bookMapper::toResponse)
+                .toList();
+    }
+    private Sort buildSort(BookFilterRequest filter) {
+        if (filter.getSortBy() == null) {
+            return Sort.unsorted();
+        }
+
+        Sort.Direction direction =
+                filter.getSortDirection() == SortDirection.DESC
+                        ? Sort.Direction.DESC
+                        : Sort.Direction.ASC;
+
+        return switch (filter.getSortBy()) {
+            case TITLE -> Sort.by(direction, "title");
+            case AUTHOR -> Sort.by(direction, "author");
+            case CREATED_AT -> Sort.by(direction, "createdAt");
+            case RATING -> Sort.by(direction, "rating");
+            case POPULARITY -> Sort.by(direction, "popularity");
+        };
+    }
+
+
 }
