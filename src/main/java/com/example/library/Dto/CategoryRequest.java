@@ -1,6 +1,8 @@
 package com.example.library.Dto;
 
+import jakarta.validation.constraints.NotBlank;
+
 public record CategoryRequest(
-        String name,
+        @NotBlank String name,
         String description
 ) {}

@@ -6,6 +6,7 @@ import com.example.library.Dto.CategoryRequest;
 import com.example.library.entity.Category;
 import com.example.library.service.BookService;
 import com.example.library.service.CategoryService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -22,7 +23,7 @@ public class CategoryController {
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public Category create(@RequestBody CategoryRequest request) {
+    public Category create(@Valid @RequestBody CategoryRequest request) {
         return categoryService.create(
                 request.name(),
                 request.description()

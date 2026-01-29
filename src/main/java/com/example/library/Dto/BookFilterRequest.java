@@ -5,6 +5,7 @@ import com.example.library.enam.SortDirection;
 import com.example.library.enam.SortField;
 import lombok.Data;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Data
@@ -26,5 +27,10 @@ public class BookFilterRequest {
     // 🔃 Сортировка
     private SortField sortBy;
     private SortDirection sortDirection;
+
+    //------------------ дата добавления книги
+    private LocalDate dateFrom;
+    private LocalDate dateTo;
+    //-------------------
 
 }

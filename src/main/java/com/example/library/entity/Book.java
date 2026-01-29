@@ -38,12 +38,28 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "books")
 @Getter
 @Setter
 @NoArgsConstructor
 public class Book {
+
+
+    //----------------------------дата создания книг
+
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    public void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
+
+
+    //----------------------------
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

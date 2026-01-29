@@ -32,7 +32,7 @@ public class BookController {
     }
 
     // ADMIN
-    @PostMapping("/admin")
+    @PostMapping("/admin/create")
     @PreAuthorize("hasRole('ADMIN')")
     public BookResponse create(@RequestBody BookCreateRequest request) {
         return bookService.create(request);

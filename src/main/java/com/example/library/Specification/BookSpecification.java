@@ -6,6 +6,8 @@ import io.minio.messages.Tag;
 import jakarta.persistence.criteria.Join;
 import org.springframework.data.jpa.domain.Specification;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 
 public class BookSpecification {
@@ -34,8 +36,10 @@ public class BookSpecification {
 
             return cb.or(
                     cb.like(cb.lower(root.get("title")), pattern),
-                    cb.like(cb.lower(root.get("author")), pattern)
+                    cb.like(cb.lower(root.get("author")), pattern),
+                    cb.like(cb.lower(root.get("description")), pattern)
             );
+
         };
     }
 
@@ -86,4 +90,37 @@ public class BookSpecification {
             return cb.greaterThanOrEqualTo(root.get("rating"), rating);
         };
     }
+    // по дате добавления
+    public static Specification<Book> createdBetween(
+            LocalDate from,
+            LocalDate to
+    ) {
+        return (root, query, cb) -> {
+
+            if (from == null && to == null) {
+                return cb.conjunction();
+            }
+
+            if (from != null && to != null) {
+                return cb.between(
+                        root.get("createdAt"),
+                        from.atStartOfDay(),
+                        to.atTime(LocalTime.MAX)
+                );
+            }
+
+            if (from != null) {
+                return cb.greaterThanOrEqualTo(
+                        root.get("createdAt"),
+                        from.atStartOfDay()
+                );
+            }
+
+            return cb.lessThanOrEqualTo(
+                    root.get("createdAt"),
+                    to.atTime(LocalTime.MAX)
+            );
+        };
+    }
+
 }
