@@ -19,10 +19,13 @@ public class CategoryService {
             throw new RuntimeException("Category already exists");
         }
 
-        return categoryRepository.save(
-                new Category(null, name, description)
-        );
+        Category category = new Category();
+        category.setName(name);
+        category.setDescription(description);
+
+        return categoryRepository.save(category);
     }
+
 
     public List<Category> getAll() {
         return categoryRepository.findAll();
