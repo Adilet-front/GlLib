@@ -34,7 +34,7 @@ public class LoggerAnswer {
         }
         paramTypes.append("]");
 
-        log.info("---------------------->[BEFORE] {}.{} called with parameter types: {}", className, methodName, paramTypes);
+        log.info("---------------------->[BEFORE] {}.{} вызывается с типами параметров: {}", className, methodName, paramTypes);
     }
 
     @AfterReturning(value = "publicMethodsFromLoggingPackage()", returning = "result")
@@ -43,7 +43,7 @@ public class LoggerAnswer {
         String methodName = joinPoint.getSignature().getName();
         String resultType = getResultTypeWithGeneric(result);
 
-        log.info("---------------------->[AFTER] {}.{} completed, result type: {}", className, methodName, resultType);
+        log.info("---------------------->[AFTER] {}.{} завершено, тип результата: {}", className, methodName, resultType);
     }
 
     @AfterThrowing(pointcut = "publicMethodsFromLoggingPackage()", throwing = "ex")
@@ -51,7 +51,7 @@ public class LoggerAnswer {
         String className = joinPoint.getTarget().getClass().getSimpleName();
         String methodName = joinPoint.getSignature().getName();
 
-        log.error("-------------------->[ERROR] Exception in {}.{}: {}", className, methodName, ex.getClass().getSimpleName());
+        log.error("-------------------->[ERROR] Исключение в {}.{}: {}", className, methodName, ex.getClass().getSimpleName());
     }
 
     private String getResultTypeWithGeneric(Object result) {
