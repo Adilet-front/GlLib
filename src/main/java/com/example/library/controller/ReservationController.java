@@ -1,10 +1,13 @@
 package com.example.library.controller;
 
 import com.example.library.Dto.ReservationResponse;
+import com.example.library.details.CustomUserDetails;
 import com.example.library.entity.User;
+import com.example.library.repository.UserRepository;
 import com.example.library.service.ReservationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,14 +18,16 @@ import java.util.List;
 public class ReservationController {
 
     private final ReservationService reservationService;
+    private final UserRepository userRepository;
 
     @PostMapping("/{bookId}")
     public ReservationResponse reserve(
             @PathVariable Long bookId,
-            @AuthenticationPrincipal User user
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        return reservationService.reserveBook(bookId, user);
+        return reservationService.reserveBook(bookId, userDetails.getUser());
     }
+
 
     @PostMapping("/{id}/take")
     public void take(

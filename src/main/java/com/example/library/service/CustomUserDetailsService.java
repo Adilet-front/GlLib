@@ -1,5 +1,6 @@
 package com.example.library.service;
 
+import com.example.library.details.CustomUserDetails;
 import com.example.library.entity.User;
 import com.example.library.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -15,14 +16,17 @@ public class CustomUserDetailsService implements UserDetailsService {
     private final UserRepository userRepository;
 
     @Override
-    public UserDetails loadUserByUsername(String email) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+    public UserDetails loadUserByUsername(String email)
+            throws UsernameNotFoundException {
 
-        return org.springframework.security.core.userdetails.User.builder()
-                .username(user.getEmail())
-                .password(user.getPassword())
-                .roles(user.getRole().name())
-                .build();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new UsernameNotFoundException(
+                                "User not found: " + email
+                        )
+                );
+
+        return new CustomUserDetails(user);
     }
 }
+
