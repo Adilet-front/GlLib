@@ -46,10 +46,10 @@ public class CustomUserDetails implements UserDetails {
         return true;
     }
 
-    @Override
-    public boolean isEnabled() {
-        return user.isEnabled();
-    }
+//    @Override
+//    public boolean isEnabled() {
+//        return user.isEnabled();
+//    }
 
 
     // 👉 удобно, чтобы доставать User в контроллере

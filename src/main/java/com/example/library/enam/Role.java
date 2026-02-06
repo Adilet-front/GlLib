@@ -1,6 +1,6 @@
 package com.example.library.enam;
 
-public enum Role {
+public enum Role  {
     USER,
     ADMIN
 }
