@@ -11,5 +11,4 @@ public record BookResponse(
         String location,
         String coverUrl,
         BookStatus status
-
 ) {}

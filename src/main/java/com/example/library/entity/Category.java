@@ -28,6 +28,4 @@ public class Category {
 
     private String description;
 
-    public Category(Object o, String name, String description) {
-    }
 }

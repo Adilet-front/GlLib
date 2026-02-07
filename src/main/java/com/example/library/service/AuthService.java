@@ -10,6 +10,7 @@ import com.example.library.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -25,33 +26,43 @@ public class AuthService {
     public AuthResponse register(RegisterRequest request) {
 
         if (userRepository.existsByEmail(request.email())) {
-            throw new EmailAlreadyExistsException(request.email());
+            throw new RuntimeException("Email already exists");
         }
 
         User user = User.builder()
                 .email(request.email())
                 .password(encoder.encode(request.password()))
                 .role(Role.USER)
+                .enabled(false) // ❗ ЖДЁТ АДМИНА
                 .build();
 
         userRepository.save(user);
+
+        return new AuthResponse(
+                "Registration successful. Waiting for admin approval."
+        );
+    }
+
+
+    public AuthResponse login(LoginRequest request) {
+
+        Authentication auth = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        request.email(),
+                        request.password()
+                )
+        );
+
+        User user = (User) auth.getPrincipal();
+
+        if (!user.isEnabled()) {
+            throw new RuntimeException("Account not approved by admin");
+        }
 
         String token = jwtService.generateToken(user);
         return new AuthResponse(token);
     }
 
-    public AuthResponse login(LoginRequest request) {
-
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.email(), request.password())
-        );
-
-        User user = userRepository.findByEmail(request.email())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        return new AuthResponse(jwtService.generateToken(user));
-    }
 }
 
 
