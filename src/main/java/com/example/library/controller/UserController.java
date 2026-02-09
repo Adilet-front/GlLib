@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/me")
+@RequestMapping("/users") // лучше использовать /users/me
 @RequiredArgsConstructor
 public class UserController {
 
@@ -18,13 +18,19 @@ public class UserController {
 
     @GetMapping("/me")
     public UserResponse me(Authentication authentication) {
+        // Достаем email (username) текущего пользователя
+        String email = authentication.getName();
 
-        User user = (User) authentication.getPrincipal();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
         return new UserResponse(
                 user.getId(),
                 user.getEmail(),
-                user.getRole().name()
+                user.getFirstName(),
+                user.getLastName(),
+                user.getRole().name(),
+                user.isEnabled()
         );
     }
 }
