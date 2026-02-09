@@ -1,10 +1,10 @@
 package com.example.library.controller;
 
 import com.example.library.Dto.ReservationResponse;
-import com.example.library.details.CustomUserDetails;
 import com.example.library.entity.User;
 import com.example.library.repository.UserRepository;
 import com.example.library.service.ReservationService;
+import com.example.library.service.impl.UserDetailsImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -73,7 +73,8 @@ public class ReservationController {
                     description = "Текущий авторизованный пользователь",
                     hidden = true
             )
-            @AuthenticationPrincipal CustomUserDetails userDetails
+            @AuthenticationPrincipal UserDetailsImpl
+                    userDetails
     ) {
         return reservationService.reserveBook(bookId, userDetails.getUser());
     }

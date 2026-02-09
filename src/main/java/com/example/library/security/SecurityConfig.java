@@ -34,6 +34,8 @@ public class SecurityConfig {
                                 "/v3/api-docs",
                                 "/auth/**",
                                 "/error").permitAll()
+                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session

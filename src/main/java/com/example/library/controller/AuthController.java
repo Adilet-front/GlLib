@@ -9,7 +9,9 @@ import com.example.library.repository.UserRepository;
 import com.example.library.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -18,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
     private final AuthService authService;
 
-    private static UserRepository userRepository;
+    private final UserRepository userRepository;
 
     @GetMapping("/test")
     public String test() {
@@ -39,12 +41,21 @@ public class AuthController {
     @PatchMapping("/admin/users/{id}/approve")
     @PreAuthorize("hasRole('ADMIN')")
     public void approve(@PathVariable Long id) {
+        System.out.println(new BCryptPasswordEncoder().encode("admin"));
+
         User user = userRepository.findById(id)
                 .orElseThrow();
 
         user.setEnabled(true);
         userRepository.save(user);
     }
+    @PostMapping("/register-admin")
+    public ResponseEntity<String> registerAdmin(
+            @RequestBody RegisterRequest request
+    ) {
+        return ResponseEntity.ok(authService.registerAdmin(request));
+    }
+
 
 
 }

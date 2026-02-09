@@ -7,6 +7,7 @@ import com.example.library.enam.Role;
 import com.example.library.entity.User;
 import com.example.library.exceptions.EmailAlreadyExistsException;
 import com.example.library.repository.UserRepository;
+import com.example.library.service.impl.UserDetailsImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -53,7 +54,10 @@ public class AuthService {
                 )
         );
 
-        User user = (User) auth.getPrincipal();
+        UserDetailsImpl userDetails =
+                (UserDetailsImpl) auth.getPrincipal();
+
+        User user = userDetails.getUser(); // ✅ ВОТ ТАК
 
         if (!user.isEnabled()) {
             throw new RuntimeException("Account not approved by admin");
@@ -61,6 +65,25 @@ public class AuthService {
 
         String token = jwtService.generateToken(user);
         return new AuthResponse(token);
+    }
+
+
+    public String registerAdmin(RegisterRequest request) {
+
+        if (userRepository.existsByEmail(request.email())) {
+            throw new RuntimeException("Admin already exists");
+        }
+
+        User admin = User.builder()
+                .email(request.email())
+                .password(encoder.encode(request.password()))
+                .role(Role.ADMIN)
+                .enabled(true)
+                .build();
+
+        userRepository.save(admin);
+
+        return "Admin registered successfully";
     }
 
 }
