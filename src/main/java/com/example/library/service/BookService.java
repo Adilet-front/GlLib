@@ -25,6 +25,8 @@ public class BookService {
     private final BookMapper bookMapper;
     private final FileStorageService fileStorageService;
 
+
+
     public List<BookResponse> getAllBooks() {
         return bookRepository.findAll()
                 .stream()
@@ -43,8 +45,23 @@ public class BookService {
         return bookMapper.toResponse(bookRepository.save(book));
     }
 
+    // Этот метод теперь пометит книгу как deleted = true вместо физического удаления
+    // СТАРЫЙ МЕТОД (Удаляет из БД совсем)
     public void delete(Long id) {
         bookRepository.deleteById(id);
+    }
+    public void softDelete(Long id) {
+        Book book = bookRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Book not found"));
+        book.setDeleted(true);
+        bookRepository.save(book);
+    }
+    // Дополнительный метод для восстановления книги
+    public void restore(Long id) {
+        Book book = bookRepository.findByIdIncludingDeleted(id)
+                .orElseThrow(() -> new RuntimeException("Book not found"));
+        book.setDeleted(false);
+        bookRepository.save(book);
     }
 
     public BookResponse uploadCover(Long bookId, MultipartFile file) {

@@ -211,4 +211,11 @@ public class BookController {
     ) {
         return bookService.uploadCover(id, file);
     }
+    // НОВЫЙ ЭНДПОИНТ для мягкого удаления
+    @Operation(summary = "Мягкое удаление книги (архивация)")
+    @PatchMapping("/admin/soft-delete/{id}") // Используем PATCH, так как обновляем поле
+    @PreAuthorize("hasRole('ADMIN')")
+    public void softDelete(@PathVariable Long id) {
+        bookService.softDelete(id);
+    }
 }

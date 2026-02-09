@@ -2,41 +2,12 @@ package com.example.library.entity;
 
 import com.example.library.enam.BookStatus;
 import jakarta.persistence.*;
-import lombok.*;
-
-//@Entity
-//@Table(name = "books")
-//@Getter
-//@Setter
-//@NoArgsConstructor
-//@AllArgsConstructor
-//@Builder
-//public class Book {
-//
-//    @Id
-//    @GeneratedValue(strategy = GenerationType.IDENTITY)
-//    private Long id;
-//
-//    @Column(nullable = false)
-//    private String title;
-//
-//    @Column(nullable = false)
-//    private String author;
-//
-//    private String category;
-//
-//    @Column(nullable = false)
-//    private String location;
-//
-//    @Enumerated(EnumType.STRING)
-//    @Column(nullable = false)
-//    private BookStatus status;
-//
-//}
-
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SoftDelete;
+import org.hibernate.annotations.SoftDeleteType;
 
 import java.time.LocalDateTime;
 
@@ -45,21 +16,10 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
+// Эта ОДНА аннотация заменяет и @SQLDelete, и @Where.
+// Она сама создаст колонку "deleted" в БД (тип boolean/0-1)
+@SoftDelete(strategy = SoftDeleteType.ACTIVE)
 public class Book {
-
-
-    //----------------------------дата создания книг
-
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @PrePersist
-    public void onCreate() {
-        this.createdAt = LocalDateTime.now();
-    }
-
-
-    //----------------------------
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -74,20 +34,26 @@ public class Book {
     @Column(length = 1000)
     private String description;
 
-
     @ManyToOne
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 
-    // где лежит книга (полка, шкаф и тд)
     @Column(nullable = false)
     private String location;
 
-    // ссылка на обложку (пока String, потом MinIO)
     private String coverUrl;
 
     @Enumerated(EnumType.STRING)
     private BookStatus status;
 
-}
+    @Column(nullable = false)
+    private boolean deleted = false; // Поле для мягкого удаления
 
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    public void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
+}
