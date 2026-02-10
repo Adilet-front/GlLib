@@ -35,4 +35,7 @@ public class User {
     @Column(nullable = false) // Новое поле
     private String lastName;
 
+    @Column(nullable = false)
+    private boolean emailVerified = false;
+
 }

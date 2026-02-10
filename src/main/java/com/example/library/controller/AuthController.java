@@ -41,10 +41,12 @@ public class AuthController {
     @PatchMapping("/admin/users/{id}/approve")
     @PreAuthorize("hasRole('ADMIN')")
     public void approve(@PathVariable Long id) {
-        System.out.println(new BCryptPasswordEncoder().encode("admin"));
-
         User user = userRepository.findById(id)
-                .orElseThrow();
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!user.isEmailVerified()) {
+            throw new RuntimeException("Cannot approve user: Email not verified yet!");
+        }
 
         user.setEnabled(true);
         userRepository.save(user);
@@ -54,6 +56,10 @@ public class AuthController {
             @RequestBody RegisterRequest request
     ) {
         return ResponseEntity.ok(authService.registerAdmin(request));
+    }
+    @GetMapping("/confirm")
+    public ResponseEntity<String> confirm(@RequestParam("token") String token) {
+        return ResponseEntity.ok(authService.confirmToken(token));
     }
 
 
