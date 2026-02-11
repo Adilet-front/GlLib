@@ -1,55 +1,38 @@
+version: "3.9"
 
-  version: "3.9"
+services:
+  db:
+    image: postgres:16.0
+    container_name: library-db
+    environment:
+      # Используем в точности те имена, что у тебя в .env
+      POSTGRES_USER: ${POSTGRES_USERNAME}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DATABASE}
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USERNAME} -d ${POSTGRES_DATABASE}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  services:
-    app:
-      build: .
-      container_name: library-app
-      ports:
-        - "8080:8080"
-      env_file:
-        - .env
-      depends_on:
-        - postgres
-    postgres:
-      image: postgres:16.0
-      container_name: library-db
-      environment:
-        username: ${POSTGRES_USERNAME}
-        password: ${POSTGRES_PASSWORD}
-        POSTGRES_DB: ${DB_NAME}
-      ports:
-        - "5432:5432"
-      healthcheck:
-        test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
-        interval: 10s
-        timeout: 5s
-        retries: 5
-      volumes:
-        - db-data:/var/lib/postgresql/data
+  backend:
+    build: .
+    container_name: library-backend
+    ports:
+      - "8080:8080"
+    environment:
+      # Важно: тут пишем 'db' (имя сервиса), а не 'localhost'!
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DATABASE}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
 
-    backend:
-      build: ./backend  # нужен build, а не image
-      container_name: library-backend
-      ports:
-        - "8080:8080"
-      environment:
-        SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${DB_NAME}
-        SPRING_DATASOURCE_USERNAME: ${DB_USER}
-        SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
-      depends_on:
-        db:
-          condition: service_healthy
-
-    frontend:
-      build: ./frontend
-      container_name: library-frontend
-      ports:
-        - "3000:80"
-      environment:
-        REACT_APP_API_URL: http://localhost:8080
-      depends_on:
-        - backend
-
-  volumes:
-    db-data:
+      # Почта
+      SPRING_MAIL_HOST: ${SPRING_MAIL_HOST}
+      SPRING_MAIL_PORT: ${SPRING_MAIL_PORT}
+      SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME}
+      SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD}
+    depends_on:
+      db:
+        condition: service_healthy

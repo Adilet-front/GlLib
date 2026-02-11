@@ -12,11 +12,14 @@ spring:
     host: smtp.gmail.com
     port: 587
     username: 0anade0@gmail.com
-    password: xzzehazmsvflghpr
+    password: xzzehazmsvflghpr # ПРЯЧЬ ЭТО ПРИ ПУШЕ В ГИТ!
     properties:
       mail:
         smtp:
           auth: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
           starttls:
             enable: true
             required: true
@@ -27,16 +30,19 @@ spring:
     show-sql: true
     properties:
       hibernate:
-        format_s_
-library:
-  reservation:
-    max-active: 3
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  # Вынес mustache из-под minio на уровень spring
+  mustache:
+    expose-request-attributes: true
 
 minio:
   endpoint: http://localhost:9000
   access-key: minio
   secret-key: minio123
-  bucket: book-covers
+  bucket: book-covers # Это будет дефолтный бакет для книг
 
-  mustache:
-    expose-request-attributes: true
+library:
+  reservation:
+    max-active: 3
