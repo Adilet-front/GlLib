@@ -39,6 +39,11 @@ public interface ReservationRepository
         and r.takenAt < :overdueDate
     """)
     List<Reservation> findOverdue(@Param("overdueDate") LocalDateTime overdueDate);
+
+    List<Reservation> findAllByStatusAndReservedAtBetween(ReservationStatus status, LocalDateTime start, LocalDateTime end);
+    List<Reservation> findAllByStatusAndReservedAtBefore(ReservationStatus status, LocalDateTime dateTime);
+    List<Reservation> findAllByStatusAndTakenAtBetween(ReservationStatus status, LocalDateTime start, LocalDateTime end);
+    List<Reservation> findAllByStatusAndTakenAtBefore(ReservationStatus status, LocalDateTime dateTime);
 }
 
 

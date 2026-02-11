@@ -4,6 +4,7 @@ import com.example.library.Dto.response.ReservationResponse;
 import com.example.library.config.ReservationProperties;
 import com.example.library.enam.BookEventType;
 import com.example.library.enam.BookStatus;
+import com.example.library.enam.NotificationType;
 import com.example.library.enam.ReservationStatus;
 import com.example.library.entity.Book;
 import com.example.library.entity.Reservation;
@@ -12,6 +13,7 @@ import com.example.library.repository.BookRepository;
 import com.example.library.repository.ReservationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -24,12 +26,17 @@ public class ReservationService {
     private final BookRepository bookRepository;
     private final ReservationProperties reservationProperties;
     private final BookHistoryService bookHistoryService;
+    private final NotificationService notificationService;
+
+
 
     /**
      * Забронировать книгу
      */
+    @Transactional // Обязательно добавь эту аннотацию!
     public ReservationResponse reserveBook(Long bookId, User user) {
 
+        // 1. Проверка лимита активных книг
         long activeCount = reservationRepository.countByUserAndStatusIn(
                 user,
                 List.of(
@@ -44,7 +51,7 @@ public class ReservationService {
             );
         }
 
-
+        // 2. Поиск и проверка доступности книги
         Book book = bookRepository.findById(bookId)
                 .orElseThrow(() -> new RuntimeException("Book not found"));
 
@@ -52,18 +59,37 @@ public class ReservationService {
             throw new RuntimeException("Book is not available");
         }
 
+        // 3. Создание записи о бронировании
         Reservation reservation = new Reservation();
         reservation.setUser(user);
         reservation.setBook(book);
         reservation.setReservedAt(LocalDateTime.now());
+        reservation.setStatus(ReservationStatus.ACTIVE); // Убедись, что ставишь начальный статус
 
+        // Меняем статус книги
         book.setStatus(BookStatus.RESERVED);
 
+        // 4. Сохранение в БД
         reservationRepository.save(reservation);
         bookRepository.save(book);
 
+        // Логируем историю
         bookHistoryService.log(book, user, BookEventType.RESERVED);
 
+        // ============================================================
+        // 5. ОТПРАВКА УВЕДОМЛЕНИЯ (Интеграция по ТЗ)
+        // ============================================================
+        String title = "Книга забронирована: " + book.getTitle();
+        String location = (book.getLocation() != null) ? book.getLocation() : "уточните на стойке";
+        String message = "Заберите её в течение 24 часов. Локация: " + location;
+
+        notificationService.createNotification(
+                user,
+                title,
+                message,
+                NotificationType.RESERVATION_SUCCESS
+        );
+        // ============================================================
 
         return toResponse(reservation);
     }
@@ -74,8 +100,8 @@ public class ReservationService {
      * @param user
      */
 
+    @Transactional
     public void returnBook(Long reservationId, User user) {
-
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new RuntimeException("Reservation not found"));
 
@@ -88,6 +114,7 @@ public class ReservationService {
         }
 
         reservation.setStatus(ReservationStatus.RETURNED);
+        reservation.setReturnedAt(LocalDateTime.now()); // Не забудь проставить дату возврата
 
         Book book = reservation.getBook();
         book.setStatus(BookStatus.AVAILABLE);
@@ -97,6 +124,13 @@ public class ReservationService {
 
         bookHistoryService.log(book, user, BookEventType.RETURNED);
 
+        // УВЕДОМЛЕНИЕ: Книга возвращена
+        notificationService.createNotification(
+                user,
+                "Книга возвращена",
+                String.format("Спасибо! Книга '%s' успешно принята библиотекой.", book.getTitle()),
+                NotificationType.RESERVATION_SUCCESS
+        );
     }
 
 
@@ -140,6 +174,13 @@ public class ReservationService {
 
         bookHistoryService.log(book, user, BookEventType.TAKEN);
 
+        notificationService.createNotification(
+                user,
+                "Книга выдана: " + book.getTitle(),
+                "Вы успешно взяли книгу. Срок чтения — 14 дней. Пожалуйста, верните её вовремя!",
+                NotificationType.RESERVATION_SUCCESS // Можно создать новый тип PICKUP_SUCCESS, если есть в enum
+        );
+
     }
 
     /**
@@ -160,6 +201,13 @@ public class ReservationService {
         bookRepository.save(book);
 
         bookHistoryService.log(book, user, BookEventType.CANCELLED);
+
+        notificationService.createNotification(
+                user,
+                "Бронирование отменено",
+                "Вы отменили бронь на книгу '" + book.getTitle() + "'.",
+                NotificationType.RESERVATION_CANCELLED
+        );
 
 
 
@@ -209,6 +257,7 @@ public class ReservationService {
                 ))
                 .toList();
     }
+
 
 }
 

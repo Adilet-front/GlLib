@@ -3,6 +3,10 @@ package com.example.library.entity;
 import com.example.library.enam.Role;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.annotations.SoftDelete;
+import org.hibernate.annotations.SoftDeleteType;
 
 
 @Entity
@@ -11,6 +15,8 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@SQLDelete(sql = "UPDATE book SET is_deleted = true WHERE id = ?")
+@SQLRestriction("is_deleted = false") // Это замена старой @Where
 public class User {
 
     @Id
@@ -37,5 +43,8 @@ public class User {
 
     @Column(nullable = false)
     private boolean emailVerified = false;
+
+    @Column(name = "is_deleted")
+    private boolean deleted = false;
 
 }
