@@ -1,0 +1,21 @@
+.page {
+  display: grid;
+  gap: clamp(20px, 4vw, 32px);
+}
+
+.section {
+  display: grid;
+  gap: 16px;
+}
+
+@media (max-width: 640px) {
+  .page {
+    gap: 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .page {
+    gap: 20px;
+  }
+}

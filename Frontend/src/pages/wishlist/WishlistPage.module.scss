@@ -1,0 +1,77 @@
+.page {
+  display: grid;
+  gap: 24px;
+}
+
+.header {
+  display: grid;
+  gap: 6px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 18px;
+}
+
+.cardWrap {
+  display: grid;
+  gap: 12px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.linkButton,
+.removeButton {
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--purple-700);
+}
+
+.linkButton:hover,
+.removeButton:hover {
+  background: var(--surface-soft);
+}
+
+.removeButton {
+  color: var(--accent-red, #e53e3e);
+  border-color: rgba(229, 62, 62, 0.3);
+}
+
+.removeButton:hover {
+  background: rgba(229, 62, 62, 0.06);
+}
+
+.empty {
+  grid-column: 1 / -1;
+  color: #6b5b7d;
+  font-size: 0.9375rem;
+}
+
+@media (max-width: 640px) {
+  .grid {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .page {
+    gap: 18px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+}

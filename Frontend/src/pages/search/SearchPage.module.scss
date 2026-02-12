@@ -1,0 +1,35 @@
+.page {
+  display: grid;
+  gap: 16px;
+}
+
+.header p {
+  color: #6b5b7d;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 18px;
+}
+
+.empty {
+  padding: 20px;
+  border-radius: 16px;
+  border: 1px dashed var(--border);
+  color: #6b5b7d;
+}
+
+@media (max-width: 640px) {
+  .grid {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+}

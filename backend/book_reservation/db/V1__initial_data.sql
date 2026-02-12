@@ -1,0 +1,2 @@
+ALTER TABLE books
+    ADD COLUMN created_at TIMESTAMP NOT NULL DEFAULT now();
