@@ -19,4 +19,6 @@ public interface BookRepository extends JpaRepository<Book, Long>, JpaSpecificat
     // Метод для нахождения книги, даже если она помечена как удаленная
     @Query(value = "SELECT * FROM books WHERE id = :id", nativeQuery = true)
     Optional<Book> findByIdIncludingDeleted(@Param("id") Long id);
+
+    boolean existsByCategoryId(Long categoryId);
 }
