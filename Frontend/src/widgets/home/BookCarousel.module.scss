@@ -1,0 +1,49 @@
+.section {
+  display: grid;
+  gap: 14px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+
+.track {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(200px, 1fr);
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.track::-webkit-scrollbar {
+  height: 6px;
+}
+
+.track::-webkit-scrollbar-thumb {
+  background: rgba(122, 70, 182, 0.25);
+  border-radius: 999px;
+}
+
+@media (max-width: 720px) {
+  .track {
+    grid-auto-columns: minmax(170px, 1fr);
+    gap: 14px;
+  }
+
+  .section {
+    gap: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .track {
+    grid-auto-columns: minmax(140px, 1fr);
+    gap: 12px;
+  }
+}
