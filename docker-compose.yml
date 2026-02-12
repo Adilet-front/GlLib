@@ -1,38 +1,40 @@
-version: "3.9"
-
 services:
   db:
     image: postgres:16.0
     container_name: library-db
     environment:
-      # Используем в точности те имена, что у тебя в .env
-      POSTGRES_USER: ${POSTGRES_USERNAME}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DATABASE}
+      POSTGRES_USER: ${POSTGRES_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-root}
+      POSTGRES_DB: ${POSTGRES_DATABASE:-postgres}
     ports:
       - "5432:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USERNAME} -d ${POSTGRES_DATABASE}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   backend:
-    build: .
+    build:
+      context: .
+      dockerfile: backend.Dockerfile
     container_name: library-backend
     ports:
       - "8080:8080"
     environment:
-      # Важно: тут пишем 'db' (имя сервиса), а не 'localhost'!
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DATABASE}
-      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USERNAME}
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
-
-      # Почта
-      SPRING_MAIL_HOST: ${SPRING_MAIL_HOST}
-      SPRING_MAIL_PORT: ${SPRING_MAIL_PORT}
-      SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME}
-      SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD}
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${POSTGRES_DATABASE:-postgres}
+      DB_USERNAME: ${POSTGRES_USERNAME:-postgres}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-root}
+      MAIL_HOST: ${MAIL_HOST:-smtp.gmail.com}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
     depends_on:
-      db:
-        condition: service_healthy
+      - db
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Frontend/frontend.Dockerfile
+    container_name: library-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend

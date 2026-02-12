@@ -1,6 +1,7 @@
 package com.example.library.service;
 
 import com.example.library.entity.Category;
+import com.example.library.repository.BookRepository;
 import com.example.library.repository.CategoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -12,6 +13,7 @@ import java.util.List;
 public class CategoryService {
 
     private final CategoryRepository categoryRepository;
+    private final BookRepository bookRepository;
 
     public Category create(String name, String description) {
 
@@ -29,6 +31,33 @@ public class CategoryService {
 
     public List<Category> getAll() {
         return categoryRepository.findAll();
+    }
+
+    public Category update(Long id, String newName, String newDescription) {
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Category not found"));
+
+        // Проверяем, не занято ли новое имя другой категорией
+        if (!category.getName().equals(newName) && categoryRepository.existsByName(newName)) {
+            throw new RuntimeException("Category with this name already exists");
+        }
+
+        category.setName(newName);
+        category.setDescription(newDescription);
+        return categoryRepository.save(category);
+    }
+
+    public void delete(Long id) {
+        if (!categoryRepository.existsById(id)) {
+            throw new RuntimeException("Category not found");
+        }
+
+        // ГЛАВНАЯ ФИШКА: Проверяем, есть ли книги в этой категории
+        if (bookRepository.existsByCategoryId(id)) {
+            throw new RuntimeException("Cannot delete category: it is associated with books");
+        }
+
+        categoryRepository.deleteById(id);
     }
 }
 

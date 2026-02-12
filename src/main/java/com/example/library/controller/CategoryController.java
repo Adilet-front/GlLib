@@ -139,4 +139,17 @@ public class CategoryController {
     ) {
         return bookService.search(filter);
     }
+    @Operation(summary = "Обновить категорию", description = "Изменение названия или описания категории. Нужен ADMIN")
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public Category update(@PathVariable Long id, @RequestBody CategoryRequest request) {
+        return categoryService.update(id, request.name(), request.description());
+    }
+
+    @Operation(summary = "Удалить категорию", description = "Удаляет категорию, если к ней не привязана ни одна книга. Нужен ADMIN")
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public void delete(@PathVariable Long id) {
+        categoryService.delete(id);
+    }
 }
