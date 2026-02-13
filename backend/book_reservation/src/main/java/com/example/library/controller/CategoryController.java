@@ -139,7 +139,6 @@ public class CategoryController {
     ) {
         return bookService.search(filter);
     }
-
     @Operation(summary = "Обновить категорию", description = "Изменение названия или описания категории. Нужен ADMIN")
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
