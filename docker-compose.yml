@@ -42,7 +42,7 @@ services:
       dockerfile: Frontend/frontend.Dockerfile
     container_name: library-frontend
     ports:
-      - "3000:80"
+      - "5175:80"
     depends_on:
       - backend
 

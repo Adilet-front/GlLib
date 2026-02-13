@@ -17,6 +17,9 @@ const ProfileNotificationsPage = lazy(
   () => import("../../pages/profile/ProfileNotificationsPage"),
 );
 const LoginPage = lazy(() => import("../../pages/login/LoginPage"));
+const ResetPasswordPage = lazy(
+  () => import("../../pages/reset-password/ResetPasswordPage"),
+);
 const HomePage = lazy(() => import("../../pages/home/HomePage"));
 const PopularPage = lazy(() => import("../../pages/popular/PopularPage"));
 const MyBooksPage = lazy(() => import("../../pages/my/MyBooksPage"));
@@ -55,25 +58,33 @@ export const AppRouter = () => (
             path="/auth/register"
             element={<LoginPage mode="register" />}
           />
-        </Route>
-        {/* Admin Routes */}
-        <Route element={<AdminLayout />}>
-          <Route path="/admin" element={<AdminDashboardPage />} />
-          <Route path="/admin/users" element={<UsersManagementPage />} />
-          <Route path="/admin/books" element={<BooksManagementPage />} />
-          <Route path="/admin/categories" element={<CategoriesManagementPage />} />
-          <Route path="/admin/overdue" element={<OverdueReservationsPage />} />
+          <Route
+            path="/auth/reset-password"
+            element={<ResetPasswordPage />}
+          />
         </Route>
 
-        <Route element={<AppLayout />}>
-          {/* Add new pages here and reuse translations from app/i18n/resources.ts */}
-          <Route path="/" element={<HomePage />} />
-          <Route path="/catalog" element={<CatalogPage />} />
-          <Route path="/book/:id" element={<BookPage />} />
-          <Route path="/popular" element={<PopularPage />} />
-          <Route path="/search" element={<SearchPage />} />
-          <Route path="/lists" element={<ListsPage />} />
-          <Route element={<AuthGuard />}>
+        <Route element={<AuthGuard />}>
+          {/* Admin Routes */}
+          <Route element={<AdminLayout />}>
+            <Route path="/admin" element={<AdminDashboardPage />} />
+            <Route path="/admin/users" element={<UsersManagementPage />} />
+            <Route path="/admin/books" element={<BooksManagementPage />} />
+            <Route
+              path="/admin/categories"
+              element={<CategoriesManagementPage />}
+            />
+            <Route path="/admin/overdue" element={<OverdueReservationsPage />} />
+          </Route>
+
+          <Route element={<AppLayout />}>
+            {/* Add new pages here and reuse translations from app/i18n/resources.ts */}
+            <Route path="/" element={<HomePage />} />
+            <Route path="/catalog" element={<CatalogPage />} />
+            <Route path="/book/:id" element={<BookPage />} />
+            <Route path="/popular" element={<PopularPage />} />
+            <Route path="/search" element={<SearchPage />} />
+            <Route path="/lists" element={<ListsPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route
               path="/profile/credentials"
@@ -84,10 +95,9 @@ export const AppRouter = () => (
               element={<ProfileNotificationsPage />}
             />
             <Route path="/reservations" element={<MyReservationsPage />} />
+            <Route path="/my" element={<MyBooksPage />} />
+            <Route path="/wishlist" element={<WishlistPage />} />
           </Route>
-
-          <Route path="/my" element={<MyBooksPage />} />
-          <Route path="/wishlist" element={<WishlistPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

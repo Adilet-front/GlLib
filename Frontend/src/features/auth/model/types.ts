@@ -19,3 +19,16 @@ export type RegisterResponse = {
   message: string;
   token?: string; // Опциональный, так как не возвращается при pending approval
 };
+
+export type ForgotPasswordRequest = {
+  email: string;
+};
+
+export type ForgotPasswordResponse = string;
+
+export type ResetPasswordRequest = {
+  token: string;
+  newPassword: string;
+};
+
+export type ResetPasswordResponse = string;

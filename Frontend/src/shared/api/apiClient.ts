@@ -9,7 +9,11 @@ const redirectToLogin = () => {
     return;
   }
 
-  const authPaths = new Set(["/auth/login", "/auth/register"]);
+  const authPaths = new Set([
+    "/auth/login",
+    "/auth/register",
+    "/auth/reset-password",
+  ]);
   if (!authPaths.has(window.location.pathname)) {
     window.location.assign("/auth/login");
   }

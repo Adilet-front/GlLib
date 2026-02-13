@@ -6,9 +6,14 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { login, register } from "../api/authApi";
+import { forgotPassword, login, register } from "../api/authApi";
 import { useAuth } from "../model/useAuth";
 import { setAccessToken } from "../../../shared/lib/auth/token";
+import {
+  FORGOT_PASSWORD_COOLDOWN_MS,
+  getForgotPasswordCooldownMs,
+  setForgotPasswordCooldown,
+} from "../../../shared/lib/auth/forgotPasswordCooldown";
 
 type Step =
   | "email"
@@ -119,7 +124,7 @@ export const LoginForm = ({ mode = "login" }: LoginFormProps) => {
           const { data } = await login({ email, password });
           setAccessToken(data.token);
           await signIn({ email });
-          const redirectTo = locationState?.from?.pathname ?? "/profile";
+          const redirectTo = locationState?.from?.pathname ?? "/";
           navigate(redirectTo, { replace: true });
           return;
         } catch (error) {
@@ -170,11 +175,39 @@ export const LoginForm = ({ mode = "login" }: LoginFormProps) => {
         setFormError(t("auth.errors.emailInvalid"));
         shouldShake = true;
       } else {
+        const remainingCooldownMs = getForgotPasswordCooldownMs(resetEmail);
+        if (remainingCooldownMs > 0) {
+          const remainingMinutes = Math.ceil(remainingCooldownMs / (60 * 1000));
+          setFormError(
+            t("auth.errors.passwordResetRateLimited", {
+              minutes: remainingMinutes,
+            }) ??
+              `Retry in ${remainingMinutes} minutes.`,
+          );
+          shouldShake = true;
+          return;
+        }
+
         setFormError(null);
-        // TODO: Отправить запрос на backend для восстановления пароля
-        // await resetPassword({ email: resetEmail });
-        setForgotPasswordSuccess(true);
-        return;
+        try {
+          await forgotPassword({ email: resetEmail });
+          setForgotPasswordCooldown(resetEmail, FORGOT_PASSWORD_COOLDOWN_MS);
+          setForgotPasswordSuccess(true);
+          return;
+        } catch (error) {
+          const err = error as {
+            response?: { data?: { message?: string; error?: string } };
+          };
+          const message =
+            err?.response?.data?.message ?? err?.response?.data?.error;
+
+          setFormError(
+            message ??
+              t("auth.errors.passwordResetRequestFailed") ??
+              "Could not send reset link. Please try again later.",
+          );
+          shouldShake = true;
+        }
       }
     } else if (step === "register-form") {
       // Валидация регистрации
@@ -313,6 +346,13 @@ export const LoginForm = ({ mode = "login" }: LoginFormProps) => {
         <div className="auth-success">
           {t("auth.passwordResetSent") || "We sent a password reset link to your email. Please check your inbox."}
         </div>
+        <button
+          className="auth-link"
+          type="button"
+          onClick={() => navigate("/auth/reset-password")}
+        >
+          {t("auth.openResetForm") || "Open reset form"}
+        </button>
         <button 
           className="button primary" 
           type="button"

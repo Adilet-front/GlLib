@@ -21,13 +21,17 @@ export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   profileLoaded: false,
   loadProfile: async () => {
-    if (!getAccessToken()) return;
+    if (!getAccessToken()) {
+      set(() => ({ isAuthed: false, user: null, profileLoaded: false }));
+      return;
+    }
     set(() => ({ profileLoaded: true }));
     try {
       const profile = await getProfile();
       set(() => ({ isAuthed: true, user: profile }));
     } catch {
-      set(() => ({ user: null }));
+      clearTokens();
+      set(() => ({ isAuthed: false, user: null, profileLoaded: false }));
     }
   },
   signIn: async (_payload) => {

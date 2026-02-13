@@ -5,10 +5,14 @@
 import type { AxiosResponse } from "axios";
 import { apiClient } from "../../../shared/api/apiClient";
 import type {
+  ForgotPasswordRequest,
+  ForgotPasswordResponse,
   LoginRequest,
   LoginResponse,
   RegisterRequest,
   RegisterResponse,
+  ResetPasswordRequest,
+  ResetPasswordResponse,
 } from "../model/types";
 
 /** Логин по email + password. Ответ с токеном: data.token */
@@ -38,3 +42,15 @@ export const register = (payload: RegisterRequest): Promise<AxiosResponse<Regist
     lastName: payload.lastName,
   });
 };
+
+/** Запрос на отправку ссылки для восстановления пароля */
+export const forgotPassword = (
+  payload: ForgotPasswordRequest,
+): Promise<AxiosResponse<ForgotPasswordResponse>> =>
+  apiClient.post<ForgotPasswordResponse>("/auth/forgot-password", payload);
+
+/** Установка нового пароля по токену */
+export const resetPassword = (
+  payload: ResetPasswordRequest,
+): Promise<AxiosResponse<ResetPasswordResponse>> =>
+  apiClient.post<ResetPasswordResponse>("/auth/reset-password", payload);
