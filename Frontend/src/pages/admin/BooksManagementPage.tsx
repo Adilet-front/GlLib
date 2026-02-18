@@ -2,6 +2,7 @@
  * Страница управления книгами (Admin)
  */
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   createBook,
   deleteBook,
@@ -16,6 +17,7 @@ import { getBooks } from "../../entities/book/api/bookApi";
 import "../../app/styles/admin.css";
 
 export const BooksManagementPage = () => {
+  const { t } = useTranslation();
   const [books, setBooks] = useState<BookResponse[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,6 +31,17 @@ export const BooksManagementPage = () => {
   });
   const [selectedCover, setSelectedCover] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const getStatusLabel = (status: string) => {
+    const labels: Record<string, string> = {
+      AVAILABLE: t("book.status.available"),
+      RESERVED: t("book.status.reserved"),
+      TAKEN: t("book.status.taken"),
+      RETURNED: t("book.status.returned"),
+      IN_YOUR_HANDS: t("book.status.taken"),
+    };
+    return labels[status] || status;
+  };
 
   const loadData = async () => {
     try {
@@ -51,7 +64,7 @@ export const BooksManagementPage = () => {
       setBooks(booksData);
       setCategories(categoriesRes.data);
     } catch (err) {
-      setError("Failed to load data");
+      setError(t("admin.books.errors.load"));
       console.error(err);
     } finally {
       setLoading(false);
@@ -65,7 +78,7 @@ export const BooksManagementPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.categoryId) {
-      alert("Please select a category");
+      alert(t("admin.books.errors.selectCategory"));
       return;
     }
 
@@ -88,13 +101,21 @@ export const BooksManagementPage = () => {
       setSelectedCover(null);
       loadData();
     } catch (err) {
-      alert("Failed to create book");
+      alert(t("admin.books.errors.create"));
       console.error(err);
     }
   };
 
   const handleDelete = async (bookId: number, hard: boolean = false) => {
-    if (!confirm(`Are you sure you want to ${hard ? "delete" : "archive"} this book?`)) {
+    if (
+      !confirm(
+        t("admin.books.confirmDelete", {
+          action: hard
+            ? t("admin.books.actions.delete")
+            : t("admin.books.actions.archive"),
+        }),
+      )
+    ) {
       return;
     }
 
@@ -106,7 +127,7 @@ export const BooksManagementPage = () => {
       }
       loadData();
     } catch (err) {
-      alert("Failed to delete book");
+      alert(t("admin.books.errors.delete"));
       console.error(err);
     }
   };
@@ -131,18 +152,18 @@ export const BooksManagementPage = () => {
     <div className="admin-page">
       <div className="admin-header">
         <div>
-          <h1>Books Management</h1>
-          <p>Create, edit, and manage library books</p>
+          <h1>{t("admin.books.title")}</h1>
+          <p>{t("admin.books.subtitle")}</p>
         </div>
         <button className="btn-primary" onClick={() => setShowModal(true)}>
-          + Add New Book
+          + {t("admin.books.actions.add")}
         </button>
       </div>
 
       {error && <div className="error-message">{error}</div>}
 
       {loading ? (
-        <div className="loading-spinner">Loading...</div>
+        <div className="loading-spinner">{t("common.loading")}</div>
       ) : (
         <div className="books-grid">
           {books.map((book) => (
@@ -151,7 +172,7 @@ export const BooksManagementPage = () => {
                 {book.coverUrl ? (
                   <img src={book.coverUrl} alt={book.title} />
                 ) : (
-                  <div className="book-cover-placeholder">No Cover</div>
+                  <div className="book-cover-placeholder">{t("admin.books.noCover")}</div>
                 )}
               </div>
               <div className="book-info">
@@ -160,7 +181,7 @@ export const BooksManagementPage = () => {
                 <p className="book-category">{book.category}</p>
                 <p className="book-location">📍 {book.location}</p>
                 <span className={`badge ${getStatusBadge(book.status)}`}>
-                  {book.status}
+                  {getStatusLabel(book.status)}
                 </span>
               </div>
               <div className="book-actions">
@@ -168,13 +189,13 @@ export const BooksManagementPage = () => {
                   className="btn-archive"
                   onClick={() => handleDelete(book.id, false)}
                 >
-                  Archive
+                  {t("admin.books.actions.archive")}
                 </button>
                 <button
                   className="btn-delete"
                   onClick={() => handleDelete(book.id, true)}
                 >
-                  Delete
+                  {t("admin.books.actions.delete")}
                 </button>
               </div>
             </div>
@@ -184,7 +205,7 @@ export const BooksManagementPage = () => {
 
       {books.length === 0 && !loading && (
         <div className="empty-state">
-          <p>No books found</p>
+          <p>{t("admin.books.empty")}</p>
         </div>
       )}
 
@@ -193,7 +214,7 @@ export const BooksManagementPage = () => {
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>Add New Book</h2>
+              <h2>{t("admin.books.modal.title")}</h2>
               <button
                 className="modal-close"
                 onClick={() => setShowModal(false)}
@@ -203,7 +224,7 @@ export const BooksManagementPage = () => {
             </div>
             <form onSubmit={handleSubmit} className="modal-form">
               <div className="form-group">
-                <label htmlFor="title">Title *</label>
+                <label htmlFor="title">{t("admin.books.fields.title")} *</label>
                 <input
                   id="title"
                   type="text"
@@ -216,7 +237,7 @@ export const BooksManagementPage = () => {
               </div>
 
               <div className="form-group">
-                <label htmlFor="author">Author *</label>
+                <label htmlFor="author">{t("admin.books.fields.author")} *</label>
                 <input
                   id="author"
                   type="text"
@@ -229,7 +250,7 @@ export const BooksManagementPage = () => {
               </div>
 
               <div className="form-group">
-                <label htmlFor="description">Description</label>
+                <label htmlFor="description">{t("admin.books.fields.description")}</label>
                 <textarea
                   id="description"
                   value={formData.description}
@@ -241,7 +262,7 @@ export const BooksManagementPage = () => {
               </div>
 
               <div className="form-group">
-                <label htmlFor="categoryId">Category *</label>
+                <label htmlFor="categoryId">{t("admin.books.fields.category")} *</label>
                 <select
                   id="categoryId"
                   value={formData.categoryId}
@@ -253,7 +274,7 @@ export const BooksManagementPage = () => {
                   }
                   required
                 >
-                  <option value="0">Select a category</option>
+                  <option value="0">{t("admin.books.fields.categoryPlaceholder")}</option>
                   {categories.map((cat) => (
                     <option key={cat.id} value={cat.id}>
                       {cat.name}
@@ -263,7 +284,7 @@ export const BooksManagementPage = () => {
               </div>
 
               <div className="form-group">
-                <label htmlFor="location">Location *</label>
+                <label htmlFor="location">{t("admin.books.fields.location")} *</label>
                 <input
                   id="location"
                   type="text"
@@ -271,13 +292,13 @@ export const BooksManagementPage = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, location: e.target.value })
                   }
-                  placeholder="e.g. Shelf A, Row 3"
+                  placeholder={t("admin.books.fields.locationPlaceholder")}
                   required
                 />
               </div>
 
               <div className="form-group">
-                <label htmlFor="cover">Book Cover</label>
+                <label htmlFor="cover">{t("admin.books.fields.cover")}</label>
                 <input
                   id="cover"
                   type="file"
@@ -292,10 +313,10 @@ export const BooksManagementPage = () => {
                   className="btn-secondary"
                   onClick={() => setShowModal(false)}
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </button>
                 <button type="submit" className="btn-primary">
-                  Create Book
+                  {t("admin.books.actions.create")}
                 </button>
               </div>
             </form>

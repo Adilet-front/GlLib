@@ -2,12 +2,19 @@
  * Layout для админ панели
  */
 import { Outlet, Link, useLocation, Navigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../../features/auth/model/useAuth";
 import "../styles/admin.css";
 
 export const AdminLayout = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const location = useLocation();
+
+  const roleLabel: Record<string, string> = {
+    ADMIN: t("admin.roles.admin"),
+    USER: t("admin.roles.user"),
+  };
 
   // Проверка прав админа
   if (!user || user.role !== "ADMIN") {
@@ -15,11 +22,11 @@ export const AdminLayout = () => {
   }
 
   const navLinks = [
-    { path: "/admin", label: "Dashboard", icon: "📊" },
-    { path: "/admin/users", label: "Users", icon: "👥" },
-    { path: "/admin/books", label: "Books", icon: "📚" },
-    { path: "/admin/categories", label: "Categories", icon: "🏷️" },
-    { path: "/admin/overdue", label: "Overdue Books", icon: "⏰" },
+    { path: "/admin", label: t("admin.nav.dashboard"), icon: "📊" },
+    { path: "/admin/users", label: t("admin.nav.users"), icon: "👥" },
+    { path: "/admin/books", label: t("admin.nav.books"), icon: "📚" },
+    { path: "/admin/categories", label: t("admin.nav.categories"), icon: "🏷️" },
+    { path: "/admin/overdue", label: t("admin.nav.overdue"), icon: "⏰" },
   ];
 
   const isActive = (path: string) => {
@@ -34,7 +41,7 @@ export const AdminLayout = () => {
       <aside className="admin-sidebar">
         <div className="admin-logo">
           <Link to="/admin">
-            <h2>📚 Library Admin</h2>
+            <h2>📚 {t("admin.layout.title")}</h2>
           </Link>
         </div>
         <nav className="admin-nav">
@@ -51,7 +58,7 @@ export const AdminLayout = () => {
         </nav>
         <div className="admin-sidebar-footer">
           <Link to="/" className="back-to-site">
-            ← Back to Site
+            ← {t("admin.layout.backToSite")}
           </Link>
         </div>
       </aside>
@@ -61,7 +68,7 @@ export const AdminLayout = () => {
             <span>
               {user.firstName} {user.lastName}
             </span>
-            <span className="user-role">{user.role}</span>
+            <span className="user-role">{roleLabel[user.role] ?? user.role}</span>
           </div>
         </header>
         <div className="admin-content">

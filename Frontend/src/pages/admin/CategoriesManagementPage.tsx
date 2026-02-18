@@ -2,6 +2,7 @@
  * Страница управления категориями (Admin)
  */
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   createCategory,
   getAllCategories,
@@ -11,6 +12,7 @@ import {
 import "../../app/styles/admin.css";
 
 export const CategoriesManagementPage = () => {
+  const { t } = useTranslation();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -27,7 +29,7 @@ export const CategoriesManagementPage = () => {
       const { data } = await getAllCategories();
       setCategories(data);
     } catch (err) {
-      setError("Failed to load categories");
+      setError(t("admin.categories.errors.load"));
       console.error(err);
     } finally {
       setLoading(false);
@@ -48,9 +50,9 @@ export const CategoriesManagementPage = () => {
       loadCategories();
     } catch (err: any) {
       if (err?.response?.status === 409) {
-        alert("Category with this name already exists");
+        alert(t("admin.categories.errors.exists"));
       } else {
-        alert("Failed to create category");
+        alert(t("admin.categories.errors.create"));
       }
       console.error(err);
     }
@@ -60,18 +62,18 @@ export const CategoriesManagementPage = () => {
     <div className="admin-page">
       <div className="admin-header">
         <div>
-          <h1>Categories Management</h1>
-          <p>Organize your library with categories</p>
+          <h1>{t("admin.categories.title")}</h1>
+          <p>{t("admin.categories.subtitle")}</p>
         </div>
         <button className="btn-primary" onClick={() => setShowModal(true)}>
-          + Add New Category
+          + {t("admin.categories.actions.add")}
         </button>
       </div>
 
       {error && <div className="error-message">{error}</div>}
 
       {loading ? (
-        <div className="loading-spinner">Loading...</div>
+        <div className="loading-spinner">{t("common.loading")}</div>
       ) : (
         <div className="categories-grid">
           {categories.map((category) => (
@@ -90,7 +92,7 @@ export const CategoriesManagementPage = () => {
 
       {categories.length === 0 && !loading && (
         <div className="empty-state">
-          <p>No categories found</p>
+          <p>{t("admin.categories.empty")}</p>
         </div>
       )}
 
@@ -99,7 +101,7 @@ export const CategoriesManagementPage = () => {
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>Add New Category</h2>
+              <h2>{t("admin.categories.modal.title")}</h2>
               <button
                 className="modal-close"
                 onClick={() => setShowModal(false)}
@@ -109,7 +111,7 @@ export const CategoriesManagementPage = () => {
             </div>
             <form onSubmit={handleSubmit} className="modal-form">
               <div className="form-group">
-                <label htmlFor="name">Category Name *</label>
+                <label htmlFor="name">{t("admin.categories.fields.name")} *</label>
                 <input
                   id="name"
                   type="text"
@@ -117,20 +119,20 @@ export const CategoriesManagementPage = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, name: e.target.value })
                   }
-                  placeholder="e.g. Science Fiction"
+                  placeholder={t("admin.categories.fields.namePlaceholder")}
                   required
                 />
               </div>
 
               <div className="form-group">
-                <label htmlFor="description">Description</label>
+                <label htmlFor="description">{t("admin.categories.fields.description")}</label>
                 <textarea
                   id="description"
                   value={formData.description}
                   onChange={(e) =>
                     setFormData({ ...formData, description: e.target.value })
                   }
-                  placeholder="Optional description"
+                  placeholder={t("admin.categories.fields.descriptionPlaceholder")}
                   rows={4}
                 />
               </div>
@@ -141,10 +143,10 @@ export const CategoriesManagementPage = () => {
                   className="btn-secondary"
                   onClick={() => setShowModal(false)}
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </button>
                 <button type="submit" className="btn-primary">
-                  Create Category
+                  {t("admin.categories.actions.create")}
                 </button>
               </div>
             </form>

@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { Book } from "../../../entities/book/ui/BookCard";
+import i18n from "../../../app/i18n";
 
 type ReadingStatus = "WILL_READ" | "READING";
 
@@ -191,9 +192,10 @@ export const useBookingStore = create<BookingState>()(
           notifications: [
             ...state.notifications,
             createNotification(
-              `У вас 24 часа, чтобы забрать книгу "${book.title}" с полки ${
-                book.location ?? "—"
-              }`,
+              i18n.t("bookingNotifications.reservePickup", {
+                title: book.title,
+                location: book.location ?? "—",
+              }),
             ),
           ],
         }));
@@ -225,9 +227,10 @@ export const useBookingStore = create<BookingState>()(
           notifications: [
             ...state.notifications,
             createNotification(
-              `Вы получили книгу "${booking.bookSnapshot.title}". Ожидаемая дата возврата: ${new Date(
-                addDays(now, 28),
-              ).toLocaleDateString("ru-RU")}`,
+              i18n.t("bookingNotifications.takeSuccess", {
+                title: booking.bookSnapshot.title,
+                date: new Date(addDays(now, 28)).toLocaleDateString(i18n.language),
+              }),
             ),
           ],
         }));
@@ -264,7 +267,10 @@ export const useBookingStore = create<BookingState>()(
           notifications: [
             ...state.notifications,
             createNotification(
-              `Книга "${booking.bookSnapshot.title}" возвращена. Дней на руках: ${daysHeld}. Оставьте отзыв?`,
+              i18n.t("bookingNotifications.returnSuccess", {
+                title: booking.bookSnapshot.title,
+                days: daysHeld,
+              }),
             ),
           ],
         }));
@@ -286,7 +292,9 @@ export const useBookingStore = create<BookingState>()(
               const restoreWish = item.wasWishBeforeReserve;
               notifications.push(
                 createNotification(
-                  `Ваша бронь на книгу "${item.bookSnapshot.title}" отменена из-за истечения времени.`,
+                  i18n.t("bookingNotifications.reservationExpired", {
+                    title: item.bookSnapshot.title,
+                  }),
                 ),
               );
               return {
@@ -322,7 +330,9 @@ export const useBookingStore = create<BookingState>()(
                 reminders.twoWeeks = true;
                 notifications.push(
                   createNotification(
-                    `Напоминаем, что книга "${item.bookSnapshot.title}" у вас уже 2 недели. Пожалуйста, верните её в течение 2 недель или свяжитесь с админом для продления.`,
+                    i18n.t("bookingNotifications.reminderTwoWeeks", {
+                      title: item.bookSnapshot.title,
+                    }),
                   ),
                 );
                 changed = true;
@@ -331,7 +341,9 @@ export const useBookingStore = create<BookingState>()(
                 reminders.fourWeeks = true;
                 notifications.push(
                   createNotification(
-                    `Срок возврата книги "${item.bookSnapshot.title}" истёк. Пожалуйста, верните книгу в ближайшее время.`,
+                    i18n.t("bookingNotifications.reminderFourWeeks", {
+                      title: item.bookSnapshot.title,
+                    }),
                   ),
                 );
                 changed = true;
