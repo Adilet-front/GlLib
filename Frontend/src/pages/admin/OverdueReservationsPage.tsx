@@ -3,11 +3,13 @@
  */
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { getOverdueReservations } from "../../entities/reservation/api/reservationApi";
 import type { ReservationResponse } from "../../entities/reservation/model/types";
 import "../../app/styles/admin.css";
 
 export const OverdueReservationsPage = () => {
+  const { t, i18n } = useTranslation();
   const [reservations, setReservations] = useState<ReservationResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -19,7 +21,7 @@ export const OverdueReservationsPage = () => {
       const { data } = await getOverdueReservations();
       setReservations(data);
     } catch (err) {
-      setError("Failed to load overdue reservations");
+      setError(t("admin.overdue.errors.load"));
       console.error(err);
     } finally {
       setLoading(false);
@@ -32,13 +34,24 @@ export const OverdueReservationsPage = () => {
 
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return "—";
-    return new Date(dateStr).toLocaleDateString("en-US", {
+    return new Date(dateStr).toLocaleDateString(i18n.language, {
       year: "numeric",
       month: "short",
       day: "numeric",
       hour: "2-digit",
       minute: "2-digit",
     });
+  };
+
+  const getStatusLabel = (status: string) => {
+    const labels: Record<string, string> = {
+      ACTIVE: t("reservations.status.active"),
+      COMPLETED: t("reservations.status.completed"),
+      EXPIRED: t("reservations.status.expired"),
+      CANCELLED: t("reservations.status.cancelled"),
+      RETURNED: t("reservations.status.returned"),
+    };
+    return labels[status] || status;
   };
 
   const getDaysOverdue = (takenAt?: string) => {
@@ -54,30 +67,30 @@ export const OverdueReservationsPage = () => {
   return (
     <div className="admin-page">
       <div className="admin-header">
-        <h1>Overdue Books</h1>
-        <p>Books that have not been returned on time</p>
+        <h1>{t("admin.overdue.title")}</h1>
+        <p>{t("admin.overdue.subtitle")}</p>
       </div>
 
       {error && <div className="error-message">{error}</div>}
 
       {loading ? (
-        <div className="loading-spinner">Loading...</div>
+        <div className="loading-spinner">{t("common.loading")}</div>
       ) : reservations.length === 0 ? (
         <div className="empty-state">
-          <p>No overdue reservations</p>
+          <p>{t("admin.overdue.empty")}</p>
         </div>
       ) : (
         <div className="admin-table-container">
           <table className="admin-table">
             <thead>
               <tr>
-                <th>Book ID</th>
-                <th>Book Title</th>
-                <th>Reservation ID</th>
-                <th>Reserved At</th>
-                <th>Taken At</th>
-                <th>Days Overdue</th>
-                <th>Status</th>
+                <th>{t("admin.overdue.table.bookId")}</th>
+                <th>{t("admin.overdue.table.bookTitle")}</th>
+                <th>{t("admin.overdue.table.reservationId")}</th>
+                <th>{t("admin.overdue.table.reservedAt")}</th>
+                <th>{t("admin.overdue.table.takenAt")}</th>
+                <th>{t("admin.overdue.table.daysOverdue")}</th>
+                <th>{t("admin.overdue.table.status")}</th>
               </tr>
             </thead>
             <tbody>
@@ -96,12 +109,12 @@ export const OverdueReservationsPage = () => {
                     <td>{formatDate(reservation.takenAt)}</td>
                     <td>
                       <span className="badge badge-danger">
-                        {daysOverdue} days
+                        {t("admin.overdue.daysUnit", { count: daysOverdue })}
                       </span>
                     </td>
                     <td>
                       <span className="badge badge-warning">
-                        {reservation.status}
+                        {getStatusLabel(reservation.status)}
                       </span>
                     </td>
                   </tr>

@@ -5,7 +5,7 @@
 export const resources = {
   ru: {
     translation: {
-      appName: "Library",
+      appName: "Библиотека",
       nav: {
         home: "Главная",
         catalog: "Каталог",
@@ -70,6 +70,7 @@ export const resources = {
         hit: "Хит",
         exclusive: "Эксклюзив",
         new: "Новинка",
+        unavailable: "Недоступно",
       },
       actions: {
         toCart: "В корзину",
@@ -116,7 +117,7 @@ export const resources = {
         },
         languages: {
           ru: "Русский",
-          en: "English",
+          en: "Английский",
           kg: "Кыргызча",
         },
         sorts: {
@@ -140,10 +141,13 @@ export const resources = {
         createAccount: "Создать аккаунт",
         avatar: "Фото профиля (необязательно)",
         uploadAvatar: "Загрузить фото",
-        avatarHint: "Максимум 5 МБ, JPG, PNG или GIF",
+        avatarHint: "Максимум 5 МБ, файл изображения.",
+        emailPlaceholder: "Введите почту",
+        avatarPreviewAlt: "Предпросмотр аватара",
+        removeAvatar: "Удалить аватар",
         errors: {
           emailRequired: "Введите почту.",
-          emailInvalid: "Введите корректный email, например name@company.com.",
+          emailInvalid: "Введите корректный адрес почты.",
           firstNameRequired: "Введите имя.",
           lastNameRequired: "Введите фамилию.",
           nameRequired: "Введите имя и фамилию.",
@@ -156,7 +160,7 @@ export const resources = {
           registerFailed: "Не удалось зарегистрироваться. Попробуйте позже.",
           fileTooLarge: "Размер файла не должен превышать 5 МБ",
           invalidFileType: "Пожалуйста, выберите файл изображения",
-          emailNotConfirmed: "Пожалуйста, подтвердите ваш email адрес. Проверьте входящие письма для ссылки подтверждения.",
+          emailNotConfirmed: "Пожалуйста, подтвердите адрес вашей почты. Проверьте входящие письма для ссылки подтверждения.",
           accountNotApproved: "Ваш аккаунт ожидает одобрения администратором. Пожалуйста, дождитесь одобрения вашей регистрации.",
           accountDisabled: "Ваш аккаунт был отключен. Пожалуйста, свяжитесь с администратором.",
           passwordTooShort: "Пароль должен содержать минимум 6 символов.",
@@ -187,8 +191,8 @@ export const resources = {
         showPassword: "Показать пароль",
         hidePassword: "Скрыть пароль",
         registrationSuccess: "Регистрация успешна!",
-        emailConfirmationSent: "Мы отправили письмо с подтверждением на ваш адрес. Пожалуйста, проверьте входящие письма и подтвердите email в течение 15 минут.",
-        adminApprovalRequired: "После подтверждения email ваш аккаунт будет ожидать одобрения администратором. Вы сможете войти после того, как администратор одобрит вашу регистрацию.",
+        emailConfirmationSent: "Мы отправили письмо с подтверждением на ваш адрес. Пожалуйста, проверьте входящие письма и подтвердите почту в течение 15 минут.",
+        adminApprovalRequired: "После подтверждения почты ваш аккаунт будет ожидать одобрения администратором. Вы сможете войти после того, как администратор одобрит вашу регистрацию.",
         registrationPending: "Ваш аккаунт создан и ожидает подтверждения администратором. Вы получите уведомление после одобрения.",
         backToLogin: "Вернуться к входу",
         passwordResetTitle: "Восстановление пароля",
@@ -227,7 +231,7 @@ export const resources = {
         noCategory: "Без категории",
         location: "Полка: {{value}}",
         notSpecified: "не указана",
-        bookId: "ID книги: {{id}}",
+        bookId: "Идентификатор книги: {{id}}",
         reviewsCount: "{{count}} отзывов",
         noDescription: "Описание книги пока не добавлено.",
         untitled: "Без названия",
@@ -273,32 +277,32 @@ export const resources = {
       },
       profile: {
         title: "Личный кабинет",
-        subtitle: "Данные профиля подключены к backend endpoint’ам.",
+        subtitle: "Данные профиля подключены к серверным эндпоинтам.",
         tab: "Профиль",
         role: "Роль",
         nameMissing: "Имя не заполнено",
         avatarAlt: "Аватар профиля",
-        avatarHint: "Максимум 5 MB.",
+        avatarHint: "Максимум 5 МБ.",
         avatarMissing: "Аватар не установлен.",
         avatarPreviewAlt: "Предпросмотр аватара",
         sections: {
           name: "Имя и фамилия",
-          email: "Смена email",
+          email: "Смена почты",
           avatar: "Аватар",
         },
         fields: {
-          email: "Email",
+          email: "Почта",
           firstName: "Имя",
           lastName: "Фамилия",
           role: "Роль",
-          currentEmail: "Текущий email",
-          newEmail: "Новый email",
+          currentEmail: "Текущая почта",
+          newEmail: "Новая почта",
           image: "Изображение",
           preview: "Предпросмотр",
         },
         actions: {
           saveName: "Сохранить имя и фамилию",
-          requestEmail: "Запросить смену email",
+          requestEmail: "Запросить смену почты",
           uploadAvatar: "Загрузить аватар",
         },
         saving: "Сохранение...",
@@ -313,13 +317,13 @@ export const resources = {
         errors: {
           load: "Не удалось загрузить профиль. Проверьте авторизацию.",
           nameUpdate: "Не удалось обновить имя и фамилию.",
-          emailRequest: "Не удалось отправить запрос на смену email.",
+          emailRequest: "Не удалось отправить запрос на смену почты.",
           avatarUpload: "Не удалось загрузить аватар.",
           avatarType: "Выберите файл изображения.",
-          avatarSize: "Размер файла должен быть меньше 5 MB.",
+          avatarSize: "Размер файла должен быть меньше 5 МБ.",
           nameRequired: "Имя и фамилия обязательны.",
-          emailRequired: "Введите новый email.",
-          sameEmail: "Новый email совпадает с текущим.",
+          emailRequired: "Введите новую почту.",
+          sameEmail: "Новая почта совпадает с текущей.",
           avatarRequired: "Выберите изображение для загрузки.",
         },
         notifications: {
@@ -398,7 +402,8 @@ export const resources = {
         notAvailable: "—",
       },
       errors: {
-        booksLoad: "Не удалось загрузить книги. Проверьте API и попробуйте снова.",
+        booksLoad: "Не удалось загрузить книги. Проверьте сервер и попробуйте снова.",
+        rootNotFound: "Корневой элемент приложения не найден.",
         fallbackTitle: "Что-то пошло не так",
         fallbackSubtitle:
           "Произошла ошибка. Попробуйте обновить страницу или вернуться позже.",
@@ -457,6 +462,174 @@ export const resources = {
         submit: "Оставить отзыв",
         duplicateError: "Вы уже оставляли отзыв на эту книгу.",
         submitError: "Не удалось отправить отзыв. Попробуйте позже.",
+      },
+      admin: {
+        layout: {
+          title: "Админ-панель библиотеки",
+          backToSite: "На сайт",
+        },
+        nav: {
+          dashboard: "Панель",
+          users: "Пользователи",
+          books: "Книги",
+          categories: "Категории",
+          overdue: "Просроченные книги",
+        },
+        roles: {
+          admin: "Администратор",
+          user: "Пользователь",
+        },
+        dashboard: {
+          title: "Панель администратора",
+          subtitle: "Сводка по библиотеке",
+          stats: {
+            users: "Пользователи",
+            pending: "{{count}} ожидают",
+            books: "Книги",
+            available: "{{count}} доступны",
+            categories: "Категории",
+          },
+          quickActions: {
+            title: "Быстрые действия",
+            addBook: "Добавить книгу",
+            createCategory: "Создать категорию",
+            approveUsers: "Одобрить пользователей",
+          },
+          errors: {
+            load: "Не удалось загрузить статистику.",
+          },
+        },
+        users: {
+          title: "Управление пользователями",
+          subtitle: "Учетные записи и права доступа",
+          filters: {
+            all: "Все пользователи",
+            pending: "Ожидают одобрения",
+            approved: "Одобрены",
+          },
+          table: {
+            name: "Имя",
+            email: "Почта",
+            role: "Роль",
+            status: "Статус",
+            actions: "Действия",
+          },
+          status: {
+            approved: "Одобрен",
+            pending: "Ожидает",
+          },
+          actions: {
+            approve: "Одобрить",
+          },
+          empty: "Пользователи не найдены",
+          errors: {
+            load: "Не удалось загрузить пользователей.",
+            approve: "Не удалось одобрить пользователя.",
+          },
+        },
+        categories: {
+          title: "Управление категориями",
+          subtitle: "Организуйте библиотеку по категориям",
+          empty: "Категории не найдены",
+          fields: {
+            name: "Название категории",
+            namePlaceholder: "например, Научная фантастика",
+            description: "Описание",
+            descriptionPlaceholder: "Описание (необязательно)",
+          },
+          modal: {
+            title: "Новая категория",
+          },
+          actions: {
+            add: "Добавить категорию",
+            create: "Создать категорию",
+          },
+          errors: {
+            load: "Не удалось загрузить категории.",
+            create: "Не удалось создать категорию.",
+            exists: "Категория с таким названием уже существует.",
+          },
+        },
+        books: {
+          title: "Управление книгами",
+          subtitle: "Создание и управление библиотечным фондом",
+          empty: "Книги не найдены",
+          noCover: "Нет обложки",
+          confirmDelete: "Вы уверены, что хотите {{action}} эту книгу?",
+          fields: {
+            title: "Название",
+            author: "Автор",
+            description: "Описание",
+            category: "Категория",
+            categoryPlaceholder: "Выберите категорию",
+            location: "Местоположение",
+            locationPlaceholder: "например, Полка 1, ряд 3",
+            cover: "Обложка книги",
+          },
+          modal: {
+            title: "Новая книга",
+          },
+          actions: {
+            add: "Добавить книгу",
+            create: "Создать книгу",
+            archive: "архивировать",
+            delete: "удалить",
+          },
+          errors: {
+            load: "Не удалось загрузить данные.",
+            selectCategory: "Выберите категорию.",
+            create: "Не удалось создать книгу.",
+            delete: "Не удалось удалить книгу.",
+          },
+        },
+        overdue: {
+          title: "Просроченные книги",
+          subtitle: "Книги, которые не были возвращены вовремя",
+          empty: "Просроченных бронирований нет",
+          daysUnit: "{{count}} дн.",
+          table: {
+            bookId: "№ книги",
+            bookTitle: "Название книги",
+            reservationId: "№ брони",
+            reservedAt: "Дата брони",
+            takenAt: "Дата выдачи",
+            daysOverdue: "Дней просрочки",
+            status: "Статус",
+          },
+          errors: {
+            load: "Не удалось загрузить просроченные бронирования.",
+          },
+        },
+      },
+      bookHistory: {
+        title: "История бронирований",
+        loading: "Загрузка истории...",
+        empty: "Для этой книги история бронирований отсутствует",
+        labels: {
+          reserved: "Бронь:",
+          taken: "Выдана:",
+          returned: "Возвращена:",
+        },
+        status: {
+          active: "Активна",
+          completed: "Завершена",
+          expired: "Просрочена",
+          cancelled: "Отменена",
+          returned: "Возвращена",
+        },
+        errors: {
+          load: "Не удалось загрузить историю",
+        },
+      },
+      bookingNotifications: {
+        reservePickup: "У вас 24 часа, чтобы забрать книгу \"{{title}}\" с полки {{location}}.",
+        takeSuccess: "Вы получили книгу \"{{title}}\". Ожидаемая дата возврата: {{date}}.",
+        returnSuccess: "Книга \"{{title}}\" возвращена. Дней на руках: {{days}}. Оставьте отзыв?",
+        reservationExpired: "Ваша бронь на книгу \"{{title}}\" отменена из-за истечения времени.",
+        reminderTwoWeeks:
+          "Напоминаем, что книга \"{{title}}\" у вас уже 2 недели. Пожалуйста, верните её в течение 2 недель или свяжитесь с администратором для продления.",
+        reminderFourWeeks:
+          "Срок возврата книги \"{{title}}\" истёк. Пожалуйста, верните книгу в ближайшее время.",
       },
     },
   },
@@ -526,6 +699,7 @@ export const resources = {
         hit: "Hit",
         exclusive: "Exclusive",
         new: "New",
+        unavailable: "Unavailable",
       },
       actions: {
         toCart: "Add to cart",
@@ -596,6 +770,9 @@ export const resources = {
         avatar: "Profile Picture (Optional)",
         uploadAvatar: "Upload Photo",
         avatarHint: "Max 5MB, JPG, PNG or GIF",
+        emailPlaceholder: "Enter email",
+        avatarPreviewAlt: "Avatar preview",
+        removeAvatar: "Remove avatar",
         errors: {
           emailRequired: "Enter email.",
           emailInvalid: "Enter a valid email, e.g. name@company.com.",
@@ -853,6 +1030,7 @@ export const resources = {
       },
       errors: {
         booksLoad: "Could not load books. Check the API and try again.",
+        rootNotFound: "Application root element not found.",
         fallbackTitle: "Something went wrong",
         fallbackSubtitle: "An error occurred. Try refreshing the page or come back later.",
         tryAgain: "Try again",
@@ -911,11 +1089,179 @@ export const resources = {
         duplicateError: "You have already reviewed this book.",
         submitError: "Could not submit review. Please try again later.",
       },
+      admin: {
+        layout: {
+          title: "Library Admin Panel",
+          backToSite: "Back to site",
+        },
+        nav: {
+          dashboard: "Dashboard",
+          users: "Users",
+          books: "Books",
+          categories: "Categories",
+          overdue: "Overdue books",
+        },
+        roles: {
+          admin: "Administrator",
+          user: "User",
+        },
+        dashboard: {
+          title: "Admin Dashboard",
+          subtitle: "Library overview",
+          stats: {
+            users: "Users",
+            pending: "{{count}} pending",
+            books: "Books",
+            available: "{{count}} available",
+            categories: "Categories",
+          },
+          quickActions: {
+            title: "Quick actions",
+            addBook: "Add book",
+            createCategory: "Create category",
+            approveUsers: "Approve users",
+          },
+          errors: {
+            load: "Failed to load statistics.",
+          },
+        },
+        users: {
+          title: "User Management",
+          subtitle: "Manage accounts and permissions",
+          filters: {
+            all: "All users",
+            pending: "Pending approval",
+            approved: "Approved",
+          },
+          table: {
+            name: "Name",
+            email: "Email",
+            role: "Role",
+            status: "Status",
+            actions: "Actions",
+          },
+          status: {
+            approved: "Approved",
+            pending: "Pending",
+          },
+          actions: {
+            approve: "Approve",
+          },
+          empty: "No users found",
+          errors: {
+            load: "Failed to load users.",
+            approve: "Failed to approve user.",
+          },
+        },
+        categories: {
+          title: "Category Management",
+          subtitle: "Organize your library by categories",
+          empty: "No categories found",
+          fields: {
+            name: "Category name",
+            namePlaceholder: "e.g. Science Fiction",
+            description: "Description",
+            descriptionPlaceholder: "Optional description",
+          },
+          modal: {
+            title: "New category",
+          },
+          actions: {
+            add: "Add category",
+            create: "Create category",
+          },
+          errors: {
+            load: "Failed to load categories.",
+            create: "Failed to create category.",
+            exists: "A category with this name already exists.",
+          },
+        },
+        books: {
+          title: "Book Management",
+          subtitle: "Create and manage library books",
+          empty: "No books found",
+          noCover: "No cover",
+          confirmDelete: "Are you sure you want to {{action}} this book?",
+          fields: {
+            title: "Title",
+            author: "Author",
+            description: "Description",
+            category: "Category",
+            categoryPlaceholder: "Select a category",
+            location: "Location",
+            locationPlaceholder: "e.g. Shelf 1, Row 3",
+            cover: "Book cover",
+          },
+          modal: {
+            title: "New book",
+          },
+          actions: {
+            add: "Add book",
+            create: "Create book",
+            archive: "archive",
+            delete: "delete",
+          },
+          errors: {
+            load: "Failed to load data.",
+            selectCategory: "Please select a category.",
+            create: "Failed to create book.",
+            delete: "Failed to delete book.",
+          },
+        },
+        overdue: {
+          title: "Overdue Books",
+          subtitle: "Books that were not returned on time",
+          empty: "No overdue reservations",
+          daysUnit: "{{count}} d.",
+          table: {
+            bookId: "Book #",
+            bookTitle: "Book title",
+            reservationId: "Reservation #",
+            reservedAt: "Reserved at",
+            takenAt: "Taken at",
+            daysOverdue: "Days overdue",
+            status: "Status",
+          },
+          errors: {
+            load: "Failed to load overdue reservations.",
+          },
+        },
+      },
+      bookHistory: {
+        title: "Reservation history",
+        loading: "Loading history...",
+        empty: "No reservation history for this book",
+        labels: {
+          reserved: "Reserved:",
+          taken: "Taken:",
+          returned: "Returned:",
+        },
+        status: {
+          active: "Active",
+          completed: "Completed",
+          expired: "Expired",
+          cancelled: "Cancelled",
+          returned: "Returned",
+        },
+        errors: {
+          load: "Failed to load history",
+        },
+      },
+      bookingNotifications: {
+        reservePickup: "You have 24 hours to pick up \"{{title}}\" from shelf {{location}}.",
+        takeSuccess: "You picked up \"{{title}}\". Expected return date: {{date}}.",
+        returnSuccess: "\"{{title}}\" was returned. Days in use: {{days}}. Leave a review?",
+        reservationExpired: "Your reservation for \"{{title}}\" was canceled due to timeout.",
+        reminderTwoWeeks:
+          "Reminder: you have had \"{{title}}\" for 2 weeks. Please return it within 2 weeks or contact an administrator for extension.",
+        reminderFourWeeks:
+          "The return period for \"{{title}}\" has expired. Please return the book as soon as possible.",
+      },
     },
   },
   kg: {
     translation: {
-      appName: "Library",
+      appName: "Китепкана",
       nav: {
         home: "Башкы бет",
         catalog: "Каталог",
@@ -979,6 +1325,7 @@ export const resources = {
         hit: "Хит",
         exclusive: "Эксклюзив",
         new: "Жаңы",
+        unavailable: "Жеткиликсиз",
       },
       actions: {
         toCart: "Себетке",
@@ -1050,6 +1397,9 @@ export const resources = {
         avatar: "Профиль сүрөтү (милдеттүү эмес)",
         uploadAvatar: "Сүрөт жүктөө",
         avatarHint: "Максимум 5 МБ, JPG, PNG же GIF",
+        emailPlaceholder: "Почтаны жазыңыз",
+        avatarPreviewAlt: "Аватарды алдын ала кароо",
+        removeAvatar: "Аватарды алып салуу",
         errors: {
           emailRequired: "Почтаны жазыңыз.",
           emailInvalid: "Туура почта жазыңыз, мисалы name@company.com.",
@@ -1307,6 +1657,7 @@ export const resources = {
       },
       errors: {
         booksLoad: "Китептерди жүктөө мүмкүн болгон жок. API'ды текшерип кайра аракет кылыңыз.",
+        rootNotFound: "Тиркеменин негизги элементи табылган жок.",
         fallbackTitle: "Бир нерсе туура эмес кетти",
         fallbackSubtitle:
           "Ката кетти. Баракты жаңыртып көрүңүз же кийинчерээк кайтыңыз.",
@@ -1365,6 +1716,174 @@ export const resources = {
         submit: "Пикир калтыруу",
         duplicateError: "Сиз бул китепке буга чейин пикир калтыргансыз.",
         submitError: "Пикирди жөнөтүү мүмкүн болгон жок. Кийинчерээк кайталаңыз.",
+      },
+      admin: {
+        layout: {
+          title: "Китепкананын админ панели",
+          backToSite: "Сайтка кайтуу",
+        },
+        nav: {
+          dashboard: "Панель",
+          users: "Колдонуучулар",
+          books: "Китептер",
+          categories: "Категориялар",
+          overdue: "Мөөнөтү өткөн китептер",
+        },
+        roles: {
+          admin: "Администратор",
+          user: "Колдонуучу",
+        },
+        dashboard: {
+          title: "Админ панели",
+          subtitle: "Китепкана боюнча кыскача маалымат",
+          stats: {
+            users: "Колдонуучулар",
+            pending: "{{count}} күтүүдө",
+            books: "Китептер",
+            available: "{{count}} жеткиликтүү",
+            categories: "Категориялар",
+          },
+          quickActions: {
+            title: "Ыкчам аракеттер",
+            addBook: "Китеп кошуу",
+            createCategory: "Категория түзүү",
+            approveUsers: "Колдонуучуларды бекитүү",
+          },
+          errors: {
+            load: "Статистиканы жүктөө мүмкүн болгон жок.",
+          },
+        },
+        users: {
+          title: "Колдонуучуларды башкаруу",
+          subtitle: "Аккаунттарды жана укуктарды башкаруу",
+          filters: {
+            all: "Бардык колдонуучулар",
+            pending: "Бекитүүнү күтүп жаткандар",
+            approved: "Бекитилгендер",
+          },
+          table: {
+            name: "Аты",
+            email: "Почта",
+            role: "Роль",
+            status: "Статус",
+            actions: "Аракеттер",
+          },
+          status: {
+            approved: "Бекитилген",
+            pending: "Күтүүдө",
+          },
+          actions: {
+            approve: "Бекитүү",
+          },
+          empty: "Колдонуучулар табылган жок",
+          errors: {
+            load: "Колдонуучуларды жүктөө мүмкүн болгон жок.",
+            approve: "Колдонуучуну бекитүү мүмкүн болгон жок.",
+          },
+        },
+        categories: {
+          title: "Категорияларды башкаруу",
+          subtitle: "Китепканаңызды категориялар боюнча уюштуруңуз",
+          empty: "Категориялар табылган жок",
+          fields: {
+            name: "Категориянын аталышы",
+            namePlaceholder: "мисалы, Илимий фантастика",
+            description: "Сүрөттөмө",
+            descriptionPlaceholder: "Кошумча сүрөттөмө (милдеттүү эмес)",
+          },
+          modal: {
+            title: "Жаңы категория",
+          },
+          actions: {
+            add: "Категория кошуу",
+            create: "Категория түзүү",
+          },
+          errors: {
+            load: "Категорияларды жүктөө мүмкүн болгон жок.",
+            create: "Категория түзүү мүмкүн болгон жок.",
+            exists: "Мындай аталыштагы категория мурунтан бар.",
+          },
+        },
+        books: {
+          title: "Китептерди башкаруу",
+          subtitle: "Китептерди түзүү жана башкаруу",
+          empty: "Китептер табылган жок",
+          noCover: "Мукаба жок",
+          confirmDelete: "Бул китепти {{action}} каалайсызбы?",
+          fields: {
+            title: "Аталышы",
+            author: "Автор",
+            description: "Сүрөттөмө",
+            category: "Категория",
+            categoryPlaceholder: "Категория тандаңыз",
+            location: "Жайгашкан жери",
+            locationPlaceholder: "мисалы, Текче 1, катар 3",
+            cover: "Китептин мукабасы",
+          },
+          modal: {
+            title: "Жаңы китеп",
+          },
+          actions: {
+            add: "Китеп кошуу",
+            create: "Китеп түзүү",
+            archive: "архивдөө",
+            delete: "өчүрүү",
+          },
+          errors: {
+            load: "Маалыматты жүктөө мүмкүн болгон жок.",
+            selectCategory: "Категория тандаңыз.",
+            create: "Китеп түзүү мүмкүн болгон жок.",
+            delete: "Китепти өчүрүү мүмкүн болгон жок.",
+          },
+        },
+        overdue: {
+          title: "Мөөнөтү өткөн китептер",
+          subtitle: "Убагында кайтарылбаган китептер",
+          empty: "Мөөнөтү өткөн брондоолор жок",
+          daysUnit: "{{count}} күн",
+          table: {
+            bookId: "Китеп №",
+            bookTitle: "Китептин аталышы",
+            reservationId: "Бронь №",
+            reservedAt: "Брондолгон күнү",
+            takenAt: "Алынган күнү",
+            daysOverdue: "Кечиккен күндөр",
+            status: "Статус",
+          },
+          errors: {
+            load: "Мөөнөтү өткөн брондоолорду жүктөө мүмкүн болгон жок.",
+          },
+        },
+      },
+      bookHistory: {
+        title: "Брондоо тарыхы",
+        loading: "Тарых жүктөлүүдө...",
+        empty: "Бул китеп боюнча брондоо тарыхы жок",
+        labels: {
+          reserved: "Брондолгон:",
+          taken: "Алынган:",
+          returned: "Кайтарылган:",
+        },
+        status: {
+          active: "Активдүү",
+          completed: "Аяктаган",
+          expired: "Мөөнөтү өткөн",
+          cancelled: "Жокко чыгарылган",
+          returned: "Кайтарылган",
+        },
+        errors: {
+          load: "Тарыхты жүктөө мүмкүн болгон жок",
+        },
+      },
+      bookingNotifications: {
+        reservePickup: "\"{{title}}\" китебин {{location}} текчесинен алуу үчүн 24 саатыңыз бар.",
+        takeSuccess: "Сиз \"{{title}}\" китебин алдыңыз. Болжолдуу кайтаруу күнү: {{date}}.",
+        returnSuccess: "\"{{title}}\" кайтарылды. Колдо болгон күндөр: {{days}}. Пикир калтырасызбы?",
+        reservationExpired: "\"{{title}}\" китебине болгон бронуңуз убактысы өтүп кеткендиктен жокко чыгарылды.",
+        reminderTwoWeeks:
+          "Эскертүү: \"{{title}}\" китеби сизде 2 жума болду. Сураныч, аны 2 жуманын ичинде кайтарыңыз же узартуу үчүн администраторго кайрылыңыз.",
+        reminderFourWeeks:
+          "\"{{title}}\" китебинин кайтаруу мөөнөтү өттү. Сураныч, китепти мүмкүн болушунча тез кайтарыңыз.",
       },
     },
   },

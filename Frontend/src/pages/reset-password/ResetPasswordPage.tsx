@@ -21,13 +21,25 @@ export const ResetPasswordPage = () => {
   const token = tokenValue.trim();
   const tokenMissing = token.length === 0;
 
+  const normalizeBackendMessage = (message?: string) =>
+    message?.toLocaleLowerCase("en-US") ?? "";
+
+  const getResetErrorMessage = (status?: number, message?: string) => {
+    const normalized = normalizeBackendMessage(message);
+    if (
+      status === 404 ||
+      normalized.includes("token") ||
+      normalized.includes("токен")
+    ) {
+      return t("auth.errors.resetTokenRequired");
+    }
+    return t("auth.errors.passwordResetFailed");
+  };
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (tokenMissing) {
-      setFormError(
-        t("auth.errors.resetTokenRequired") ??
-          "Reset token is missing. Please use the link from your email.",
-      );
+      setFormError(t("auth.errors.resetTokenRequired"));
       return;
     }
 
@@ -37,10 +49,7 @@ export const ResetPasswordPage = () => {
     }
 
     if (newPassword.length < MIN_PASSWORD_LENGTH) {
-      setFormError(
-        t("auth.errors.passwordTooShort") ??
-          "Password must contain at least 6 characters.",
-      );
+      setFormError(t("auth.errors.passwordTooShort"));
       return;
     }
 
@@ -57,19 +66,11 @@ export const ResetPasswordPage = () => {
       setIsSuccess(true);
     } catch (error) {
       const err = error as {
-        response?: { data?: { message?: string; error?: string } };
+        response?: { status?: number; data?: { message?: string; error?: string } };
       };
       const message =
         err?.response?.data?.message ?? err?.response?.data?.error;
-
-      if (message) {
-        setFormError(message);
-      } else {
-        setFormError(
-          t("auth.errors.passwordResetFailed") ??
-            "Could not reset password. Please request a new reset link.",
-        );
-      }
+      setFormError(getResetErrorMessage(err?.response?.status, message));
     } finally {
       setIsSubmitting(false);
     }
@@ -78,19 +79,14 @@ export const ResetPasswordPage = () => {
   if (isSuccess) {
     return (
       <div className="auth-form">
-        <div className="auth-title">
-          {t("auth.passwordResetSuccessTitle") || "Password updated"}
-        </div>
-        <div className="auth-success">
-          {t("auth.passwordResetSuccess") ||
-            "Your password has been updated. You can now sign in."}
-        </div>
+        <div className="auth-title">{t("auth.passwordResetSuccessTitle")}</div>
+        <div className="auth-success">{t("auth.passwordResetSuccess")}</div>
         <button
           className="button primary"
           type="button"
           onClick={() => navigate("/auth/login", { replace: true })}
         >
-          {t("auth.backToLogin") || "Back to Login"}
+          {t("auth.backToLogin")}
         </button>
       </div>
     );
@@ -98,25 +94,19 @@ export const ResetPasswordPage = () => {
 
   return (
     <form className="auth-form" onSubmit={handleSubmit}>
-      <div className="auth-title">
-        {t("auth.passwordResetSetTitle") || "Set new password"}
-      </div>
+      <div className="auth-title">{t("auth.passwordResetSetTitle")}</div>
       <div className="form-hint">
         {tokenMissing
-          ? t("auth.passwordResetTokenMissing") ||
-            "Reset token is missing. Open the reset link from your email."
-          : t("auth.passwordResetSetHint") ||
-            "Create a new password for your account."}
+          ? t("auth.passwordResetTokenMissing")
+          : t("auth.passwordResetSetHint")}
       </div>
 
       <div className={`field ${formError ? "is-error" : ""}`}>
-        <label htmlFor="reset-token">
-          {t("auth.resetToken") || "Reset token"}
-        </label>
+        <label htmlFor="reset-token">{t("auth.resetToken")}</label>
         <input
           id="reset-token"
           type="text"
-          placeholder={t("auth.resetTokenPlaceholder") || "Paste token from email"}
+          placeholder={t("auth.resetTokenPlaceholder")}
           value={tokenValue}
           onChange={(event) => {
             setTokenValue(event.target.value);
@@ -127,13 +117,11 @@ export const ResetPasswordPage = () => {
       </div>
 
       <div className={`field ${formError ? "is-error" : ""}`}>
-        <label htmlFor="new-password">
-          {t("auth.newPassword") || "New password"}
-        </label>
+        <label htmlFor="new-password">{t("auth.newPassword")}</label>
         <input
           id="new-password"
           type="password"
-          placeholder={t("auth.newPasswordPlaceholder") || "********"}
+          placeholder={t("auth.newPasswordPlaceholder")}
           value={newPassword}
           onChange={(event) => {
             setNewPassword(event.target.value);
@@ -144,13 +132,11 @@ export const ResetPasswordPage = () => {
       </div>
 
       <div className={`field ${formError ? "is-error" : ""}`}>
-        <label htmlFor="confirm-password">
-          {t("auth.passwordConfirm") || "Confirm password"}
-        </label>
+        <label htmlFor="confirm-password">{t("auth.passwordConfirm")}</label>
         <input
           id="confirm-password"
           type="password"
-          placeholder={t("auth.passwordConfirmPlaceholder") || "********"}
+          placeholder={t("auth.passwordConfirmPlaceholder")}
           value={confirmPassword}
           onChange={(event) => {
             setConfirmPassword(event.target.value);
@@ -168,15 +154,15 @@ export const ResetPasswordPage = () => {
 
       <button className="button primary" type="submit" disabled={isSubmitting}>
         {isSubmitting
-          ? t("auth.resettingPassword") || "Saving..."
-          : t("auth.savePassword") || "Save password"}
+          ? t("auth.resettingPassword")
+          : t("auth.savePassword")}
       </button>
       <button
         className="auth-link"
         type="button"
         onClick={() => navigate("/auth/login")}
       >
-        {t("auth.backToLogin") || "Back to Login"}
+        {t("auth.backToLogin")}
       </button>
     </form>
   );

@@ -96,6 +96,78 @@ export const LoginForm = ({ mode = "login" }: LoginFormProps) => {
     </svg>
   );
 
+  const normalizeBackendMessage = (message?: string) =>
+    message?.toLocaleLowerCase("en-US") ?? "";
+
+  const getLoginErrorMessage = (status?: number, message?: string) => {
+    const normalized = normalizeBackendMessage(message);
+
+    if (status === 403) {
+      return t("auth.errors.accountNotApproved");
+    }
+
+    if (status === 400) {
+      if (
+        normalized.includes("confirm") &&
+        (normalized.includes("email") || normalized.includes("почт"))
+      ) {
+        return t("auth.errors.emailNotConfirmed");
+      }
+
+      if (
+        normalized.includes("not approved") ||
+        normalized.includes("pending") ||
+        normalized.includes("ожида") ||
+        normalized.includes("approval")
+      ) {
+        return t("auth.errors.accountNotApproved");
+      }
+
+      if (
+        normalized.includes("disabled") ||
+        normalized.includes("отключ") ||
+        normalized.includes("blocked")
+      ) {
+        return t("auth.errors.accountDisabled");
+      }
+    }
+
+    return t("auth.errors.invalidCredentials");
+  };
+
+  const getRegisterErrorMessage = (status?: number, message?: string) => {
+    const normalized = normalizeBackendMessage(message);
+
+    if (
+      status === 409 ||
+      normalized.includes("already exists") ||
+      normalized.includes("already registered") ||
+      normalized.includes("уже")
+    ) {
+      return t("auth.errors.emailAlreadyExists");
+    }
+
+    if (
+      normalized.includes("password") &&
+      (normalized.includes("6") ||
+        normalized.includes("short") ||
+        normalized.includes("миним"))
+    ) {
+      return t("auth.errors.passwordTooShort");
+    }
+
+    if (
+      normalized.includes("first") ||
+      normalized.includes("last") ||
+      normalized.includes("name") ||
+      normalized.includes("имя")
+    ) {
+      return t("auth.errors.nameRequired");
+    }
+
+    return t("auth.errors.registerFailed");
+  };
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const email = values.email.trim();
@@ -134,26 +206,7 @@ export const LoginForm = ({ mode = "login" }: LoginFormProps) => {
           const status = err?.response?.status;
           const message =
             err?.response?.data?.message ?? err?.response?.data?.error;
-          
-          if (status === 400 && message) {
-            // Проверяем специфические сообщения об ошибках
-            if (message.toLowerCase().includes("email") && message.toLowerCase().includes("confirm")) {
-              setFormError(t("auth.errors.emailNotConfirmed") || "Please confirm your email address. Check your inbox for the confirmation link.");
-            } else if (message.toLowerCase().includes("not approved") || message.toLowerCase().includes("pending")) {
-              setFormError(t("auth.errors.accountNotApproved") || "Your account is pending admin approval. Please wait for administrator to approve your registration.");
-            } else if (message.toLowerCase().includes("disabled") || !message.toLowerCase().includes("enabled")) {
-              setFormError(t("auth.errors.accountDisabled") || "Your account has been disabled. Please contact the administrator.");
-            } else {
-              setFormError(message);
-            }
-            shouldShake = true;
-            return;
-          }
-          if (status === 403) {
-            setFormError(t("auth.errors.accountNotApproved") || "Your account is pending admin approval. Please wait for administrator to approve your registration.");
-            shouldShake = true;
-            return;
-          }
+
           if (status === 404) {
             navigate("/auth/register", {
               replace: true,
@@ -161,7 +214,8 @@ export const LoginForm = ({ mode = "login" }: LoginFormProps) => {
             });
             return;
           }
-          setFormError(t("auth.errors.invalidCredentials"));
+
+          setFormError(getLoginErrorMessage(status, message));
           shouldShake = true;
         }
       }
@@ -181,8 +235,7 @@ export const LoginForm = ({ mode = "login" }: LoginFormProps) => {
           setFormError(
             t("auth.errors.passwordResetRateLimited", {
               minutes: remainingMinutes,
-            }) ??
-              `Retry in ${remainingMinutes} minutes.`,
+            }),
           );
           shouldShake = true;
           return;
@@ -196,16 +249,23 @@ export const LoginForm = ({ mode = "login" }: LoginFormProps) => {
           return;
         } catch (error) {
           const err = error as {
-            response?: { data?: { message?: string; error?: string } };
+            response?: { status?: number; data?: { message?: string; error?: string } };
           };
           const message =
             err?.response?.data?.message ?? err?.response?.data?.error;
 
-          setFormError(
-            message ??
-              t("auth.errors.passwordResetRequestFailed") ??
-              "Could not send reset link. Please try again later.",
-          );
+          const normalizedMessage = normalizeBackendMessage(message);
+          if (
+            err?.response?.status === 429 ||
+            normalizedMessage.includes("too many") ||
+            normalizedMessage.includes("rate")
+          ) {
+            setFormError(
+              t("auth.errors.passwordResetRateLimited", { minutes: 1 }),
+            );
+          } else {
+            setFormError(t("auth.errors.passwordResetRequestFailed"));
+          }
           shouldShake = true;
         }
       }
@@ -226,7 +286,7 @@ export const LoginForm = ({ mode = "login" }: LoginFormProps) => {
       if (shouldShake) {
         // Email validation failed.
       } else if (!firstName || !lastName) {
-        setFormError(t("auth.errors.nameRequired") || "First and last name are required");
+        setFormError(t("auth.errors.nameRequired"));
         shouldShake = true;
       } else if (!regPass || !confirm) {
         setFormError(t("auth.errors.passwordRequired"));
@@ -254,17 +314,14 @@ export const LoginForm = ({ mode = "login" }: LoginFormProps) => {
           const status = err?.response?.status;
           const message =
             err?.response?.data?.message ?? err?.response?.data?.error;
-          if (status === 400 && message) {
-            setFormError(message);
-            shouldShake = true;
-            return;
-          }
+
           if (status === 409) {
-            setFormError(t("auth.errors.emailAlreadyExists"));
+            setFormError(getRegisterErrorMessage(status, message));
             setStep("password");
             return;
           }
-          setFormError(t("auth.errors.registerFailed"));
+
+          setFormError(getRegisterErrorMessage(status, message));
           shouldShake = true;
         }
       }
@@ -288,12 +345,12 @@ export const LoginForm = ({ mode = "login" }: LoginFormProps) => {
     if (file) {
       // Проверка размера файла (максимум 5MB)
       if (file.size > 5 * 1024 * 1024) {
-        setFormError(t("auth.errors.fileTooLarge") || "File size must be less than 5MB");
+        setFormError(t("auth.errors.fileTooLarge"));
         return;
       }
       // Проверка типа файла
       if (!file.type.startsWith("image/")) {
-        setFormError(t("auth.errors.invalidFileType") || "Please select an image file");
+        setFormError(t("auth.errors.invalidFileType"));
         return;
       }
       setAvatarFile(file);
@@ -318,21 +375,19 @@ export const LoginForm = ({ mode = "login" }: LoginFormProps) => {
   if (registrationSuccess) {
     return (
       <div className="auth-form">
-        <div className="auth-title">{t("auth.registrationSuccess") || "Registration Successful!"}</div>
+        <div className="auth-title">{t("auth.registrationSuccess")}</div>
         <div className="auth-success" style={{ lineHeight: "1.6" }}>
           <p style={{ marginBottom: "12px" }}>
-            {t("auth.emailConfirmationSent") || "We've sent a confirmation email to your address. Please check your inbox and confirm your email within 15 minutes."}
+            {t("auth.emailConfirmationSent")}
           </p>
-          <p>
-            {t("auth.adminApprovalRequired") || "After confirming your email, your account will be pending admin approval. You will be able to login once an administrator approves your registration."}
-          </p>
+          <p>{t("auth.adminApprovalRequired")}</p>
         </div>
         <button 
           className="button primary" 
           type="button"
           onClick={() => navigate("/auth/login")}
         >
-          {t("auth.backToLogin") || "Back to Login"}
+          {t("auth.backToLogin")}
         </button>
       </div>
     );
@@ -342,16 +397,14 @@ export const LoginForm = ({ mode = "login" }: LoginFormProps) => {
   if (forgotPasswordSuccess) {
     return (
       <div className="auth-form">
-        <div className="auth-title">{t("auth.passwordResetTitle") || "Password Reset"}</div>
-        <div className="auth-success">
-          {t("auth.passwordResetSent") || "We sent a password reset link to your email. Please check your inbox."}
-        </div>
+        <div className="auth-title">{t("auth.passwordResetTitle")}</div>
+        <div className="auth-success">{t("auth.passwordResetSent")}</div>
         <button
           className="auth-link"
           type="button"
           onClick={() => navigate("/auth/reset-password")}
         >
-          {t("auth.openResetForm") || "Open reset form"}
+          {t("auth.openResetForm")}
         </button>
         <button 
           className="button primary" 
@@ -362,7 +415,7 @@ export const LoginForm = ({ mode = "login" }: LoginFormProps) => {
             setFormError(null);
           }}
         >
-          {t("auth.backToLogin") || "Back to Login"}
+          {t("auth.backToLogin")}
         </button>
       </div>
     );
@@ -381,7 +434,7 @@ export const LoginForm = ({ mode = "login" }: LoginFormProps) => {
             id="email"
             type="text"
             name="email"
-            placeholder="name@company.com"
+            placeholder={t("auth.emailPlaceholder")}
             inputMode="email"
             value={values.email}
             onChange={handleChange}
@@ -422,17 +475,15 @@ export const LoginForm = ({ mode = "login" }: LoginFormProps) => {
         </>
       ) : step === "forgot-password" ? (
         <>
-          <div className="auth-title">{t("auth.passwordResetTitle") || "Password Reset"}</div>
-          <div className="form-hint">
-            {t("auth.passwordResetHint") || "Enter your email and we'll send you a link to reset your password."}
-          </div>
+          <div className="auth-title">{t("auth.passwordResetTitle")}</div>
+          <div className="form-hint">{t("auth.passwordResetHint")}</div>
           <div className={`field ${showFieldError ? "is-error" : ""}`}>
             <label htmlFor="forgot-email">{t("auth.email")}</label>
             <input
               id="forgot-email"
               type="text"
               name="forgotEmail"
-              placeholder="name@company.com"
+              placeholder={t("auth.emailPlaceholder")}
               inputMode="email"
               value={forgotPasswordEmail}
               onChange={(event) => {
@@ -456,7 +507,7 @@ export const LoginForm = ({ mode = "login" }: LoginFormProps) => {
                 id="register-email"
                 type="text"
                 name="email"
-                placeholder="name@company.com"
+                placeholder={t("auth.emailPlaceholder")}
                 inputMode="email"
                 value={values.email}
                 onChange={handleChange}
@@ -480,12 +531,12 @@ export const LoginForm = ({ mode = "login" }: LoginFormProps) => {
             </div>
           ) : null}
           <div className={`field ${showFieldError ? "is-error" : ""}`}>
-            <label htmlFor="register-firstName">{t("auth.firstName") || "First Name"}</label>
+            <label htmlFor="register-firstName">{t("auth.firstName")}</label>
             <input
               id="register-firstName"
               type="text"
               name="firstName"
-              placeholder={t("auth.firstNamePlaceholder") || "John"}
+              placeholder={t("auth.firstNamePlaceholder")}
               value={registerProfile.firstName}
               onChange={(event) => {
                 setRegisterProfile((prev) => ({
@@ -499,12 +550,12 @@ export const LoginForm = ({ mode = "login" }: LoginFormProps) => {
             />
           </div>
           <div className={`field ${showFieldError ? "is-error" : ""}`}>
-            <label htmlFor="register-lastName">{t("auth.lastName") || "Last Name"}</label>
+            <label htmlFor="register-lastName">{t("auth.lastName")}</label>
             <input
               id="register-lastName"
               type="text"
               name="lastName"
-              placeholder={t("auth.lastNamePlaceholder") || "Doe"}
+              placeholder={t("auth.lastNamePlaceholder")}
               value={registerProfile.lastName}
               onChange={(event) => {
                 setRegisterProfile((prev) => ({
@@ -518,16 +569,20 @@ export const LoginForm = ({ mode = "login" }: LoginFormProps) => {
             />
           </div>
           <div className="field">
-            <label htmlFor="register-avatar">{t("auth.avatar") || "Profile Picture (Optional)"}</label>
+            <label htmlFor="register-avatar">{t("auth.avatar")}</label>
             <div className="avatar-upload">
               {avatarPreview ? (
                 <div className="avatar-preview">
-                  <img src={avatarPreview} alt="Avatar preview" className="avatar-preview-image" />
+                  <img
+                    src={avatarPreview}
+                    alt={t("auth.avatarPreviewAlt")}
+                    className="avatar-preview-image"
+                  />
                   <button 
                     type="button" 
                     className="avatar-remove" 
                     onClick={clearAvatar}
-                    aria-label="Remove avatar"
+                    aria-label={t("auth.removeAvatar")}
                   >
                     ×
                   </button>
@@ -539,7 +594,7 @@ export const LoginForm = ({ mode = "login" }: LoginFormProps) => {
                     <polyline points="17 8 12 3 7 8" />
                     <line x1="12" y1="3" x2="12" y2="15" />
                   </svg>
-                  <span>{t("auth.uploadAvatar") || "Upload Photo"}</span>
+                  <span>{t("auth.uploadAvatar")}</span>
                 </label>
               )}
               <input
@@ -551,7 +606,7 @@ export const LoginForm = ({ mode = "login" }: LoginFormProps) => {
               />
             </div>
             <div className="form-hint" style={{ fontSize: "0.75rem", marginTop: "4px" }}>
-              {t("auth.avatarHint") || "Max 5MB, JPG, PNG or GIF"}
+              {t("auth.avatarHint")}
             </div>
           </div>
           <div className={`field ${showFieldError ? "is-error" : ""}`}>
@@ -635,7 +690,7 @@ export const LoginForm = ({ mode = "login" }: LoginFormProps) => {
           : step === "password"
             ? t("auth.signIn")
             : step === "forgot-password"
-              ? t("auth.sendResetLink") || "Send Reset Link"
+              ? t("auth.sendResetLink")
               : t("auth.savePassword")}
       </button>
       {step === "password" ? (
@@ -677,14 +732,14 @@ export const LoginForm = ({ mode = "login" }: LoginFormProps) => {
       {step === "email" && mode === "login" ? (
         <>
           <div className="auth-divider">
-            <span>{t("auth.or") || "or"}</span>
+            <span>{t("auth.or")}</span>
           </div>
           <button
             className="button ghost"
             type="button"
             onClick={() => navigate("/auth/register")}
           >
-            {t("auth.createAccount") || "Create New Account"}
+            {t("auth.createAccount")}
           </button>
           <div className="form-hint">{t("auth.hint")}</div>
         </>

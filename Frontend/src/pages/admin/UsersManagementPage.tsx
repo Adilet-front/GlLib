@@ -2,6 +2,7 @@
  * Страница управления пользователями (Admin)
  */
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { getAllUsers, approveUser } from "../../entities/admin/api/adminApi";
 import type { UserResponse } from "../../entities/user/model/types";
 import "../../app/styles/admin.css";
@@ -9,6 +10,7 @@ import "../../app/styles/admin.css";
 type FilterTab = "all" | "pending" | "approved";
 
 export const UsersManagementPage = () => {
+  const { t } = useTranslation();
   const [users, setUsers] = useState<UserResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FilterTab>("all");
@@ -21,7 +23,7 @@ export const UsersManagementPage = () => {
       const { data } = await getAllUsers(enabled);
       setUsers(data);
     } catch (err) {
-      setError("Failed to load users");
+      setError(t("admin.users.errors.load"));
       console.error(err);
     } finally {
       setLoading(false);
@@ -44,7 +46,7 @@ export const UsersManagementPage = () => {
       // Перезагрузить список
       loadUsers(filter === "all" ? undefined : filter === "approved");
     } catch (err) {
-      alert("Failed to approve user");
+      alert(t("admin.users.errors.approve"));
       console.error(err);
     }
   };
@@ -57,11 +59,19 @@ export const UsersManagementPage = () => {
     return colors[role] || "badge-default";
   };
 
+  const getRoleLabel = (role: string) => {
+    const labels: Record<string, string> = {
+      ADMIN: t("admin.roles.admin"),
+      USER: t("admin.roles.user"),
+    };
+    return labels[role] || role;
+  };
+
   return (
     <div className="admin-page">
       <div className="admin-header">
-        <h1>Users Management</h1>
-        <p>Manage user accounts and permissions</p>
+        <h1>{t("admin.users.title")}</h1>
+        <p>{t("admin.users.subtitle")}</p>
       </div>
 
       <div className="admin-filters">
@@ -69,37 +79,37 @@ export const UsersManagementPage = () => {
           className={`filter-btn ${filter === "all" ? "active" : ""}`}
           onClick={() => setFilter("all")}
         >
-          All Users
+          {t("admin.users.filters.all")}
         </button>
         <button
           className={`filter-btn ${filter === "pending" ? "active" : ""}`}
           onClick={() => setFilter("pending")}
         >
-          Pending Approval
+          {t("admin.users.filters.pending")}
         </button>
         <button
           className={`filter-btn ${filter === "approved" ? "active" : ""}`}
           onClick={() => setFilter("approved")}
         >
-          Approved
+          {t("admin.users.filters.approved")}
         </button>
       </div>
 
       {error && <div className="error-message">{error}</div>}
 
       {loading ? (
-        <div className="loading-spinner">Loading...</div>
+        <div className="loading-spinner">{t("common.loading")}</div>
       ) : (
         <div className="admin-table-container">
           <table className="admin-table">
             <thead>
               <tr>
                 <th>ID</th>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Role</th>
-                <th>Status</th>
-                <th>Actions</th>
+                <th>{t("admin.users.table.name")}</th>
+                <th>{t("admin.users.table.email")}</th>
+                <th>{t("admin.users.table.role")}</th>
+                <th>{t("admin.users.table.status")}</th>
+                <th>{t("admin.users.table.actions")}</th>
               </tr>
             </thead>
             <tbody>
@@ -112,14 +122,16 @@ export const UsersManagementPage = () => {
                   <td>{user.email}</td>
                   <td>
                     <span className={`badge ${getRoleBadge(user.role)}`}>
-                      {user.role}
+                      {getRoleLabel(user.role)}
                     </span>
                   </td>
                   <td>
                     <span
                       className={`badge ${user.enabled ? "badge-success" : "badge-warning"}`}
                     >
-                      {user.enabled ? "Approved" : "Pending"}
+                      {user.enabled
+                        ? t("admin.users.status.approved")
+                        : t("admin.users.status.pending")}
                     </span>
                   </td>
                   <td>
@@ -128,7 +140,7 @@ export const UsersManagementPage = () => {
                         className="btn-approve"
                         onClick={() => handleApprove(user.id)}
                       >
-                        Approve
+                        {t("admin.users.actions.approve")}
                       </button>
                     )}
                   </td>
@@ -139,7 +151,7 @@ export const UsersManagementPage = () => {
 
           {users.length === 0 && (
             <div className="empty-state">
-              <p>No users found</p>
+              <p>{t("admin.users.empty")}</p>
             </div>
           )}
         </div>

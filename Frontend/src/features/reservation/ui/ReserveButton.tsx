@@ -74,11 +74,12 @@ export const ReserveButton = ({
       } else if (status === 400) {
         if (
           typeof message === "string" &&
-          message.toLowerCase().includes("maximum number")
+          (message.toLowerCase().includes("maximum number") ||
+            message.toLowerCase().includes("максим"))
         ) {
           alert(t("reservation.errors.limitReached"));
         } else {
-          alert(message || t("reservation.errors.notAvailable"));
+          alert(t("reservation.errors.notAvailable"));
         }
       } else {
         alert(t("reservation.errors.generic"));
