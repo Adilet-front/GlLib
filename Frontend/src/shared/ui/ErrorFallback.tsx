@@ -3,12 +3,15 @@
  * Кнопка «Попробовать снова» сбрасывает границу и перерисовывает дерево;
  * «Обновить страницу» — полная перезагрузка.
  */
+import { useTranslation } from "react-i18next";
+
 type ErrorFallbackProps = {
   error?: Error;
   onReset?: () => void;
 };
 
 export const ErrorFallback = ({ error, onReset }: ErrorFallbackProps) => {
+  const { t } = useTranslation();
   const isDev = import.meta.env.DEV;
   const handleReload = () => {
     window.location.reload();
@@ -38,10 +41,10 @@ export const ErrorFallback = ({ error, onReset }: ErrorFallbackProps) => {
         }}
       >
         <h1 style={{ fontSize: "1.25rem", fontWeight: 600 }}>
-          Что-то пошло не так
+          {t("errors.fallbackTitle")}
         </h1>
         <p style={{ fontSize: "0.9375rem", color: "#6b5b7d" }}>
-          Произошла ошибка. Попробуйте обновить страницу или вернуться позже.
+          {t("errors.fallbackSubtitle")}
         </p>
         {error && isDev && (
           <pre
@@ -81,7 +84,7 @@ export const ErrorFallback = ({ error, onReset }: ErrorFallbackProps) => {
                 fontSize: "0.9375rem",
               }}
             >
-              Попробовать снова
+              {t("errors.tryAgain")}
             </button>
           )}
           <button
@@ -98,7 +101,7 @@ export const ErrorFallback = ({ error, onReset }: ErrorFallbackProps) => {
               fontSize: "0.9375rem",
             }}
           >
-            Обновить страницу
+            {t("errors.reloadPage")}
           </button>
         </div>
       </div>

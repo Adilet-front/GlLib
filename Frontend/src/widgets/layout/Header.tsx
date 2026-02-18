@@ -1,39 +1,16 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { createPortal } from "react-dom";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { getUserActiveReservations } from "../../entities/booking/api/bookingApi";
+import { getUnreadNotificationsCount } from "../../entities/notification/api/notificationApi";
 import { useAuth } from "../../features/auth/model/useAuth";
+import { useSearchSuggestions } from "../../shared/lib/search/useSearchSuggestions";
 import styles from "./Header.module.scss";
 
-// type ActionLinkProps = {
-//   to: string;
-//   label: string;
-//   icon: string;
-//   badge?: number;
-//   onClick?: () => void;
-// };
-
-// const ActionLink = ({ to, label, icon, badge, onClick }: ActionLinkProps) => (
-//   <Link to={to} className={styles.actionLink} onClick={onClick}>
-//     <span className={styles.actionIcon} aria-hidden="true">
-//       {icon}
-//     </span>
-//     <span className={styles.actionLabel}>{label}</span>
-//     {badge ? <span className={styles.badge}>{badge}</span> : null}
-//   </Link>
-// );
-
-const shuffleList = (items: string[]) => {
-  const shuffled = [...items];
-  for (let index = shuffled.length - 1; index > 0; index -= 1) {
-    const swapIndex = Math.floor(Math.random() * (index + 1));
-    [shuffled[index], shuffled[swapIndex]] = [
-      shuffled[swapIndex],
-      shuffled[index],
-    ];
-  }
-  return shuffled;
-};
+type HeaderDropdown = "my-books" | "profile";
+const DROPDOWN_CLOSE_DELAY = 650;
 
 export const Header = () => {
   const { t } = useTranslation();
@@ -41,50 +18,125 @@ export const Header = () => {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState<HeaderDropdown | null>(
+    null,
+  );
   const [query, setQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const searchTimerRef = useRef<number | null>(null);
-  const suggestions = useMemo(
-    () => [
-      "татьяна устинова",
-      "сергей лукьяненко",
-      "стивен кинг",
-      "андрей васильев",
-      "вебтун",
-    ],
-    [],
-  );
-  const [shuffledSuggestions, setShuffledSuggestions] =
-    useState<string[]>(suggestions);
-  const normalizedQuery = query.trim().toLowerCase();
-  const suggestionItems = useMemo(() => {
-    if (!normalizedQuery) {
-      return shuffledSuggestions;
-    }
-
-    return suggestions.filter((item) => item.includes(normalizedQuery));
-  }, [normalizedQuery, suggestions, shuffledSuggestions]);
-
-  // const cartTarget = "/cart";
-
+  const dropdownCloseTimerRef = useRef<number | null>(null);
+  const actionsRef = useRef<HTMLDivElement | null>(null);
   const canUseDom = typeof document !== "undefined";
-  const handleSignOut = () => {
-    if (!confirm("Вы уверены, что хотите выйти из аккаунта?")) return;
-    signOut();
-    navigate("/");
-  };
+
+  const { data: activeReservations = [] } = useQuery({
+    queryKey: ["reservations", "active"],
+    queryFn: async () => {
+      const { data } = await getUserActiveReservations();
+      return data;
+    },
+    enabled: isAuthenticated,
+    staleTime: 60 * 1000,
+  });
+
+  const { data: unreadNotificationsCount = 0 } = useQuery({
+    queryKey: ["notifications", "unread-count"],
+    queryFn: getUnreadNotificationsCount,
+    enabled: isAuthenticated,
+    staleTime: 30 * 1000,
+  });
+
+  const {
+    suggestions,
+    isLoading: isSuggestionsLoading,
+    isError: isSuggestionsError,
+  } = useSearchSuggestions({
+    term: query,
+    isAuthed: isAuthenticated,
+    isActive: isSearchOpen,
+  });
+
+  useEffect(() => {
+    if (!canUseDom) {
+      return;
+    }
+    document.body.classList.toggle("search-open", isSearchOpen);
+    return () => {
+      document.body.classList.remove("search-open");
+    };
+  }, [isSearchOpen, canUseDom]);
+
+  const clearDropdownCloseTimer = useCallback(() => {
+    if (dropdownCloseTimerRef.current) {
+      window.clearTimeout(dropdownCloseTimerRef.current);
+      dropdownCloseTimerRef.current = null;
+    }
+  }, []);
+
+  const openDropdown = useCallback(
+    (dropdown: HeaderDropdown) => {
+      clearDropdownCloseTimer();
+      setActiveDropdown(dropdown);
+    },
+    [clearDropdownCloseTimer],
+  );
+
+  const toggleDropdown = useCallback(
+    (dropdown: HeaderDropdown) => {
+      clearDropdownCloseTimer();
+      setActiveDropdown((current) => (current === dropdown ? null : dropdown));
+    },
+    [clearDropdownCloseTimer],
+  );
+
+  const scheduleDropdownClose = useCallback(
+    (dropdown: HeaderDropdown) => {
+      clearDropdownCloseTimer();
+      dropdownCloseTimerRef.current = window.setTimeout(() => {
+        setActiveDropdown((current) => (current === dropdown ? null : current));
+        dropdownCloseTimerRef.current = null;
+      }, DROPDOWN_CLOSE_DELAY);
+    },
+    [clearDropdownCloseTimer],
+  );
+
+  const closeDropdowns = useCallback(() => {
+    clearDropdownCloseTimer();
+    setActiveDropdown(null);
+  }, [clearDropdownCloseTimer]);
 
   useEffect(() => {
     return () => {
       if (searchTimerRef.current) {
         window.clearTimeout(searchTimerRef.current);
       }
+      if (dropdownCloseTimerRef.current) {
+        window.clearTimeout(dropdownCloseTimerRef.current);
+      }
     };
   }, []);
 
+  useEffect(() => {
+    if (!canUseDom || !activeDropdown) {
+      return;
+    }
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node | null;
+      if (target && actionsRef.current?.contains(target)) {
+        return;
+      }
+      closeDropdowns();
+    };
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+    };
+  }, [activeDropdown, canUseDom, closeDropdowns]);
+
   const submitSearch = (term: string) => {
     const normalized = term.trim();
-    if (!normalized) return;
+    if (!normalized) {
+      return;
+    }
     setIsSearching(true);
     setIsSearchOpen(false);
     navigate(`/search?q=${encodeURIComponent(normalized)}`);
@@ -96,20 +148,48 @@ export const Header = () => {
     }, 900);
   };
 
+  const handleSignOut = () => {
+    if (!confirm(t("header.signOutConfirm"))) {
+      return;
+    }
+    signOut();
+    navigate("/");
+  };
+
+  const activeReservationCount = activeReservations.length;
+  const hasUnreadNotifications = unreadNotificationsCount > 0;
+  const effectiveDropdown =
+    !isAuthenticated && activeDropdown === "profile" ? null : activeDropdown;
+
   return (
     <>
       <header
         className={styles.header}
         data-search-open={isSearchOpen ? "true" : "false"}
       >
+        {isSearchOpen ? (
+          <div
+            className={styles.headerOverlay}
+            aria-hidden="true"
+            onMouseDown={() => setIsSearchOpen(false)}
+          />
+        ) : null}
         <div className={styles.row}>
           <div className={styles.left}>
             <button
               className={styles.burger}
               type="button"
-              onClick={() => setIsMenuOpen((prev) => !prev)}
+              onClick={() =>
+                setIsMenuOpen((prev) => {
+                  const next = !prev;
+                  if (next) {
+                    closeDropdowns();
+                  }
+                  return next;
+                })
+              }
               aria-expanded={isMenuOpen}
-              aria-label="Toggle menu"
+              aria-label={t("header.toggleMenu")}
               data-open={isMenuOpen ? "true" : "false"}
             >
               <span />
@@ -123,6 +203,7 @@ export const Header = () => {
               {t("header.catalogButton")}
             </NavLink>
           </div>
+
           <form
             className={styles.search}
             role="search"
@@ -131,13 +212,14 @@ export const Header = () => {
               submitSearch(query);
             }}
             onFocusCapture={() => {
-              setIsSearchOpen(true);
-              if (!normalizedQuery) {
-                setShuffledSuggestions(shuffleList(suggestions));
+              if (isAuthenticated) {
+                closeDropdowns();
+                setIsSearchOpen(true);
               }
             }}
             onBlurCapture={(event) => {
-              if (!event.currentTarget.contains(event.relatedTarget as Node)) {
+              const nextTarget = event.relatedTarget as Node | null;
+              if (!event.currentTarget.contains(nextTarget)) {
                 setIsSearchOpen(false);
               }
             }}
@@ -147,11 +229,7 @@ export const Header = () => {
               placeholder={t("search.placeholder")}
               value={query}
               onChange={(event) => {
-                const next = event.target.value;
-                setQuery(next);
-                if (!next.trim()) {
-                  setShuffledSuggestions(shuffleList(suggestions));
-                }
+                setQuery(event.target.value);
               }}
             />
             <button
@@ -162,120 +240,175 @@ export const Header = () => {
               {isSearching ? (
                 <span className={styles.searchLoader} aria-hidden="true" />
               ) : null}
-              <span className={styles.searchLabel}>Искать</span>
+              <span className={styles.searchLabel}>
+                {t("search.submitButton")}
+              </span>
             </button>
-            {isSearchOpen ? (
+            {isSearchOpen && isAuthenticated ? (
               <div className={styles.searchDropdown}>
-                {suggestionItems.map((item) => (
-                  <button
-                    key={item}
-                    type="button"
-                    className={styles.searchItem}
-                    onMouseDown={(event) => event.preventDefault()}
-                    onClick={() => {
-                      setQuery(item);
-                      submitSearch(item);
-                    }}
-                  >
-                    {item}
-                  </button>
-                ))}
+                {isSuggestionsLoading ? (
+                  <p className={styles.searchEmpty}>
+                    {t("search.suggestionsLoading")}
+                  </p>
+                ) : isSuggestionsError ? (
+                  <p className={styles.searchEmpty}>
+                    {t("search.suggestionsError")}
+                  </p>
+                ) : suggestions.length ? (
+                  suggestions.map((suggestion) => (
+                    <button
+                      key={suggestion.id}
+                      type="button"
+                      className={styles.searchItem}
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => {
+                        setQuery(suggestion.query);
+                        submitSearch(suggestion.query);
+                      }}
+                    >
+                      <span className={styles.searchItemMain}>
+                        <span className={styles.searchItemPrimary}>
+                          {suggestion.primary}
+                        </span>
+                        <span className={styles.searchItemType}>
+                          {suggestion.kind === "author"
+                            ? t("search.suggestionTypeAuthor")
+                            : t("search.suggestionTypeBook")}
+                        </span>
+                      </span>
+                      <span className={styles.searchItemSecondary}>
+                        {suggestion.kind === "author"
+                          ? t("search.suggestionAuthorHint")
+                          : suggestion.secondary}
+                      </span>
+                    </button>
+                  ))
+                ) : (
+                  <p className={styles.searchEmpty}>
+                    {t("search.suggestionsEmpty")}
+                  </p>
+                )}
               </div>
             ) : null}
           </form>
-          {/* <nav className={styles.nav}>
-          <NavLink
-            to="/"
-            className={({ isActive }) =>
-              isActive
-                ? `${styles.navLink} ${styles.navLinkActive}`
-                : styles.navLink
-            }
-          >
-            {t("nav.new")}
-          </NavLink>
-          <NavLink
-            to="/popular"
-            className={({ isActive }) =>
-              isActive
-                ? `${styles.navLink} ${styles.navLinkActive}`
-                : styles.navLink
-            }
-          >
-            {t("nav.popular")}
-          </NavLink>
-          <NavLink
-            to="/lists"
-            className={({ isActive }) =>
-              isActive
-                ? `${styles.navLink} ${styles.navLinkActive}`
-                : styles.navLink
-            }
-          >
-            {t("nav.picks")}
-          </NavLink>
-        </nav> */}
-          <div className={styles.actions}>
-            {/* <ActionLink
-            to={cartTarget}
-            label={t("nav.cart")}
-            icon="C"
-            badge={isAuthenticated ? 2 : undefined}
-          /> */}
-            <details className={styles.navDropdown}>
-              <summary className={styles.navSummary}>
+
+          <div className={styles.actions} ref={actionsRef}>
+            <div
+              className={styles.navDropdown}
+              onMouseEnter={() => openDropdown("my-books")}
+              onMouseLeave={() => scheduleDropdownClose("my-books")}
+              onFocusCapture={() => openDropdown("my-books")}
+              onBlurCapture={(event) => {
+                const nextTarget = event.relatedTarget as Node | null;
+                if (!event.currentTarget.contains(nextTarget)) {
+                  scheduleDropdownClose("my-books");
+                }
+              }}
+            >
+              <button
+                type="button"
+                className={styles.navSummary}
+                data-open={effectiveDropdown === "my-books" ? "true" : "false"}
+                aria-expanded={effectiveDropdown === "my-books"}
+                onClick={() => toggleDropdown("my-books")}
+              >
                 {t("nav.myBooks")}
-              </summary>
-              <div className={styles.navMenu}>
-                <NavLink to="/my">{t("nav.myBooks")}</NavLink>
-                <NavLink to="/wishlist">{t("nav.wishlist")}</NavLink>
-                <NavLink to="/lists">{t("nav.lists")}</NavLink>
+                {isAuthenticated && activeReservationCount > 0 ? (
+                  <span className={styles.counterBadge}>
+                    {activeReservationCount}
+                  </span>
+                ) : null}
+              </button>
+              <div
+                className={styles.navMenu}
+                data-open={effectiveDropdown === "my-books" ? "true" : "false"}
+                aria-hidden={
+                  effectiveDropdown === "my-books" ? "false" : "true"
+                }
+              >
+                <NavLink to="/my" onClick={closeDropdowns}>
+                  {t("nav.myBooks")}
+                </NavLink>
+                <NavLink to="/wishlist" onClick={closeDropdowns}>
+                  {t("nav.wishlist")}
+                </NavLink>
               </div>
-            </details>
+            </div>
 
             {!isAuthenticated ? (
               <Link to="/auth/login" className={styles.loginButton}>
                 {t("nav.login")}
               </Link>
             ) : (
-              <details className={styles.profileMenu}>
-                <summary className={styles.profileSummary}>
-                  <span className={styles.profileAvatar} aria-hidden="true" />
-                  <span className={styles.profileMeta}>
-                    <span className={styles.profileEmail}>
-                      {user?.email ?? "Профиль"}
+              <div
+                className={styles.profileMenu}
+                onMouseEnter={() => openDropdown("profile")}
+                onMouseLeave={() => scheduleDropdownClose("profile")}
+                onFocusCapture={() => openDropdown("profile")}
+                onBlurCapture={(event) => {
+                  const nextTarget = event.relatedTarget as Node | null;
+                  if (!event.currentTarget.contains(nextTarget)) {
+                    scheduleDropdownClose("profile");
+                  }
+                }}
+              >
+                <button
+                  type="button"
+                  className={styles.profileSummary}
+                  data-open={effectiveDropdown === "profile" ? "true" : "false"}
+                  aria-expanded={effectiveDropdown === "profile"}
+                  aria-label={t("nav.profile")}
+                  onClick={() => toggleDropdown("profile")}
+                >
+                  {user?.avatarUrl ? (
+                    <img
+                      className={styles.profileAvatar}
+                      src={user.avatarUrl}
+                      alt=""
+                    />
+                  ) : (
+                    <span className={styles.profileAvatar} aria-hidden="true" />
+                  )}
+                  {hasUnreadNotifications ? (
+                    <span className={styles.counterBadge}>
+                      {unreadNotificationsCount}
                     </span>
-                    {user?.role ? (
-                      <span className={styles.profileRole}>{user.role}</span>
-                    ) : null}
-                  </span>
-                </summary>
-                <div className={styles.profileDropdown}>
-                  <div className={styles.profileInfo}>
-                    <div className={styles.profileInfoEmail}>
-                      {user?.email ?? "—"}
-                    </div>
-                    {user?.role ? (
-                      <div className={styles.profileInfoRole}>{user.role}</div>
-                    ) : null}
-                  </div>
-                  <NavLink to="/profile">Профиль</NavLink>
-                  <NavLink to="/profile/credentials">
-                    Вход и безопасность
+                  ) : null}
+                </button>
+                <div
+                  className={styles.profileDropdown}
+                  data-open={effectiveDropdown === "profile" ? "true" : "false"}
+                  aria-hidden={
+                    effectiveDropdown === "profile" ? "false" : "true"
+                  }
+                >
+                  <NavLink to="/profile" onClick={closeDropdowns}>
+                    {t("nav.profile")}
                   </NavLink>
-                  <NavLink to="/profile/notifications">Уведомления</NavLink>
+                  <NavLink to="/profile/notifications" onClick={closeDropdowns}>
+                    {t("header.notifications")}
+                    {hasUnreadNotifications ? (
+                      <span className={styles.inlineCounter}>
+                        {unreadNotificationsCount}
+                      </span>
+                    ) : null}
+                  </NavLink>
                   <button
                     type="button"
                     className={styles.profileLogout}
-                    onClick={handleSignOut}
+                    onClick={() => {
+                      closeDropdowns();
+                      handleSignOut();
+                    }}
                   >
-                    Выйти
+                    {t("nav.logout")}
                   </button>
                 </div>
-              </details>
+              </div>
             )}
           </div>
         </div>
+
         <div
           className={styles.mobilePanel}
           data-open={isMenuOpen ? "true" : "false"}
@@ -286,6 +419,11 @@ export const Header = () => {
             </NavLink>
             <NavLink to="/my" onClick={() => setIsMenuOpen(false)}>
               {t("nav.myBooks")}
+              {isAuthenticated && activeReservationCount > 0 ? (
+                <span className={styles.inlineCounter}>
+                  {activeReservationCount}
+                </span>
+              ) : null}
             </NavLink>
             <NavLink to="/wishlist" onClick={() => setIsMenuOpen(false)}>
               {t("nav.wishlist")}
@@ -293,8 +431,8 @@ export const Header = () => {
           </nav>
           <div className={styles.mobileActions}>
             {!isAuthenticated ? (
-              <Link 
-                to="/auth/login" 
+              <Link
+                to="/auth/login"
                 className={styles.mobileLoginButton}
                 onClick={() => setIsMenuOpen(false)}
               >
@@ -303,22 +441,30 @@ export const Header = () => {
             ) : (
               <>
                 <div className={styles.mobileProfileCard}>
-                  <div className={styles.mobileProfileAvatar} />
-                  <div className={styles.mobileProfileInfo}>
-                    <div className={styles.mobileProfileEmail}>
-                      {user?.email ?? "—"}
-                    </div>
-                    {user?.role ? (
-                      <div className={styles.mobileProfileRole}>{user.role}</div>
-                    ) : null}
-                  </div>
+                  {user?.avatarUrl ? (
+                    <img
+                      className={styles.mobileProfileAvatar}
+                      src={user.avatarUrl}
+                      alt=""
+                    />
+                  ) : (
+                    <div className={styles.mobileProfileAvatar} />
+                  )}
                 </div>
                 <div className={styles.mobileProfileLinks}>
                   <NavLink to="/profile" onClick={() => setIsMenuOpen(false)}>
-                    Профиль
+                    {t("nav.profile")}
                   </NavLink>
-                  <NavLink to="/profile/credentials" onClick={() => setIsMenuOpen(false)}>
-                    Безопасность
+                  <NavLink
+                    to="/profile/notifications"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    {t("header.notifications")}
+                    {hasUnreadNotifications ? (
+                      <span className={styles.inlineCounter}>
+                        {unreadNotificationsCount}
+                      </span>
+                    ) : null}
                   </NavLink>
                 </div>
                 <button
@@ -326,7 +472,7 @@ export const Header = () => {
                   className={styles.mobileLogoutButton}
                   onClick={handleSignOut}
                 >
-                  Выйти
+                  {t("nav.logout")}
                 </button>
               </>
             )}

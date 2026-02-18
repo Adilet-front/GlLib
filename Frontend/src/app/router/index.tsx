@@ -10,9 +10,6 @@ import { Loader } from "../../shared/ui/Loader";
 const CatalogPage = lazy(() => import("../../pages/catalog/CatalogPage"));
 const BookPage = lazy(() => import("../../pages/book/BookPage"));
 const ProfilePage = lazy(() => import("../../pages/profile/ProfilePage"));
-const ProfileCredentialsPage = lazy(
-  () => import("../../pages/profile/ProfileCredentialsPage"),
-);
 const ProfileNotificationsPage = lazy(
   () => import("../../pages/profile/ProfileNotificationsPage"),
 );
@@ -24,7 +21,6 @@ const HomePage = lazy(() => import("../../pages/home/HomePage"));
 const PopularPage = lazy(() => import("../../pages/popular/PopularPage"));
 const MyBooksPage = lazy(() => import("../../pages/my/MyBooksPage"));
 const WishlistPage = lazy(() => import("../../pages/wishlist/WishlistPage"));
-const ListsPage = lazy(() => import("../../pages/lists/ListsPage"));
 const SearchPage = lazy(() => import("../../pages/search/SearchPage"));
 const MyReservationsPage = lazy(
   () => import("../../pages/reservations/MyReservationsPage"),
@@ -84,12 +80,7 @@ export const AppRouter = () => (
             <Route path="/book/:id" element={<BookPage />} />
             <Route path="/popular" element={<PopularPage />} />
             <Route path="/search" element={<SearchPage />} />
-            <Route path="/lists" element={<ListsPage />} />
             <Route path="/profile" element={<ProfilePage />} />
-            <Route
-              path="/profile/credentials"
-              element={<ProfileCredentialsPage />}
-            />
             <Route
               path="/profile/notifications"
               element={<ProfileNotificationsPage />}

@@ -2,16 +2,19 @@
  * Бейдж статуса книги: доступна / забронирована / на руках.
  * Стили: .status, .status--available, .status--reserved, .status--borrowed.
  */
+import { useTranslation } from "react-i18next";
+
 type StatusBadgeProps = {
   status: "available" | "reserved" | "borrowed";
 };
 
-const statusLabel: Record<StatusBadgeProps["status"], string> = {
-  available: "Доступна",
-  reserved: "Забронирована",
-  borrowed: "На руках",
-};
+export const StatusBadge = ({ status }: StatusBadgeProps) => {
+  const { t } = useTranslation();
+  const statusLabel: Record<StatusBadgeProps["status"], string> = {
+    available: t("book.status.available"),
+    reserved: t("book.status.reserved"),
+    borrowed: t("book.status.taken"),
+  };
 
-export const StatusBadge = ({ status }: StatusBadgeProps) => (
-  <span className={`status status--${status}`}>{statusLabel[status]}</span>
-);
+  return <span className={`status status--${status}`}>{statusLabel[status]}</span>;
+};

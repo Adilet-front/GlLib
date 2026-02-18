@@ -1,6 +1,6 @@
 /**
  * Zustand-стор авторизации: есть ли токен, профиль пользователя, загрузка профиля.
- * signIn — после логина/регистрации (токен уже в localStorage); loadProfile подтягивает /users/me.
+ * signIn — после логина/регистрации (токен уже в localStorage); loadProfile подтягивает /api/profile/me.
  */
 import { create } from "zustand";
 import type { User } from "../../../entities/user/model/types";

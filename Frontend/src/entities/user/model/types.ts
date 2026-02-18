@@ -1,9 +1,10 @@
-/** Модель пользователя (профиль с /users/me) */
+/** Модель пользователя (профиль с /api/profile/me) */
 export type User = {
   id: number;
   email: string;
   firstName?: string;
   lastName?: string;
+  avatarUrl?: string;
   role: string;
   enabled?: boolean;
 };

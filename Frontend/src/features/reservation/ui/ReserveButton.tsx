@@ -2,8 +2,15 @@
  * Кнопка для бронирования книги
  */
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { reserveBook } from "../../../entities/reservation/api/reservationApi";
+import {
+  optimisticIncrementUnread,
+  rollbackOptimisticUnread,
+  syncUnreadNotifications,
+} from "../../../entities/notification/model/optimisticUnread";
 import { useAuth } from "../../auth/model/useAuth";
 
 interface ReserveButtonProps {
@@ -20,8 +27,10 @@ export const ReserveButton = ({
   onReserved,
 }: ReserveButtonProps) => {
   const [loading, setLoading] = useState(false);
+  const { t } = useTranslation();
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const handleReserve = async () => {
     if (!isAuthenticated) {
@@ -30,29 +39,53 @@ export const ReserveButton = ({
     }
 
     if (!isAvailable) {
-      alert("This book is not available for reservation");
+      alert(t("reservation.errors.notAvailable"));
       return;
     }
 
+    let optimisticSnapshot:
+      | Awaited<ReturnType<typeof optimisticIncrementUnread>>
+      | undefined;
+
     try {
       setLoading(true);
+      optimisticSnapshot = await optimisticIncrementUnread(queryClient);
       await reserveBook(bookId);
-      alert(`"${bookTitle}" has been reserved successfully!`);
+      alert(t("reservation.success", { title: bookTitle }));
       onReserved?.();
       navigate("/reservations");
-    } catch (err: any) {
-      const status = err?.response?.status;
-      const message = err?.response?.data?.message || err?.response?.data?.error;
+    } catch (err: unknown) {
+      rollbackOptimisticUnread(queryClient, optimisticSnapshot);
+      const response = (
+        err as { response?: { status?: number; data?: unknown } } | undefined
+      )?.response;
+      const status = response?.status;
+      const responseData = response?.data;
+      const message =
+        typeof responseData === "string"
+          ? responseData
+          : typeof responseData === "object" && responseData
+            ? (responseData as { message?: string; error?: string }).message ||
+              (responseData as { message?: string; error?: string }).error
+            : undefined;
 
       if (status === 409) {
-        alert("You already have an active reservation for this book");
+        alert(t("reservation.errors.alreadyReserved"));
       } else if (status === 400) {
-        alert(message || "This book is not available for reservation");
+        if (
+          typeof message === "string" &&
+          message.toLowerCase().includes("maximum number")
+        ) {
+          alert(t("reservation.errors.limitReached"));
+        } else {
+          alert(message || t("reservation.errors.notAvailable"));
+        }
       } else {
-        alert("Failed to reserve book. Please try again.");
+        alert(t("reservation.errors.generic"));
       }
       console.error(err);
     } finally {
+      await syncUnreadNotifications(queryClient);
       setLoading(false);
     }
   };
@@ -60,7 +93,7 @@ export const ReserveButton = ({
   if (!isAvailable) {
     return (
       <button className="btn-reserve disabled" disabled>
-        Not Available
+        {t("reservation.notAvailable")}
       </button>
     );
   }
@@ -71,7 +104,7 @@ export const ReserveButton = ({
       onClick={handleReserve}
       disabled={loading}
     >
-      {loading ? "Reserving..." : "Reserve Book"}
+      {loading ? t("reservation.reserving") : t("reservation.reserveAction")}
     </button>
   );
 };

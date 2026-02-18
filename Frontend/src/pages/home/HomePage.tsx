@@ -1,124 +1,136 @@
-/**
- * Главная: карусели книг (популярное, новинки, рекомендации и т.д.).
- * Для авторизованных показываются блоки «Продолжить», «Для вас», «Недавно просмотренные».
- * Карусель «Популярное» и «Новинки» подгружаются из API; при отсутствии данных — моки.
- */
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { useAuth } from "../../features/auth/model/useAuth";
 import { getBooks } from "../../entities/book/api/bookApi";
+import type { Book as ApiBook } from "../../entities/book/model/types";
+import { type Book } from "../../entities/book/ui/BookCard";
+import { useAuth } from "../../features/auth/model/useAuth";
 import { BookCarousel } from "../../widgets/home/BookCarousel";
-import type { Book } from "../../entities/book/ui/BookCard";
 import styles from "./HomePage.module.scss";
 
-const FALLBACK_POPULAR: Book[] = [
-  { id: 101, title: "Платформа", author: "М. Уэльбек", label: "hit" },
-  { id: 102, title: "Тонкое искусство", author: "М. Мэнсон", label: "exclusive" },
-  { id: 103, title: "Сила привычки", author: "Ч. Дахигг" },
-  { id: 104, title: "Маленький принц", author: "А. де Сент-Экзюпери", label: "hit" },
-];
+const RAIL_BOOKS_LIMIT = 16;
+const SKELETON_ITEMS = 6;
+
+const sortByRecommended = (left: ApiBook, right: ApiBook) => {
+  const leftRating = left.averageRating ?? 0;
+  const rightRating = right.averageRating ?? 0;
+  if (rightRating !== leftRating) {
+    return rightRating - leftRating;
+  }
+
+  const leftReviews = left.reviewCount ?? 0;
+  const rightReviews = right.reviewCount ?? 0;
+  if (rightReviews !== leftReviews) {
+    return rightReviews - leftReviews;
+  }
+
+  return right.id - left.id;
+};
+
+const sortByPopular = (left: ApiBook, right: ApiBook) => {
+  const leftReviews = left.reviewCount ?? 0;
+  const rightReviews = right.reviewCount ?? 0;
+  if (rightReviews !== leftReviews) {
+    return rightReviews - leftReviews;
+  }
+
+  const leftRating = left.averageRating ?? 0;
+  const rightRating = right.averageRating ?? 0;
+  if (rightRating !== leftRating) {
+    return rightRating - leftRating;
+  }
+
+  return right.id - left.id;
+};
+
+const sortByRecent = (left: ApiBook, right: ApiBook) => right.id - left.id;
+
+const toCardBook = (book: ApiBook): Book => ({
+  id: book.id,
+  title: book.title,
+  author: book.author,
+  coverUrl: book.coverUrl,
+  category: book.category,
+  averageRating: book.averageRating,
+  reviewCount: book.reviewCount,
+  status: book.status,
+  label: book.status === "AVAILABLE" ? undefined : "unavailable",
+});
+
+const pickBooks = (
+  source: ApiBook[],
+  limit: number,
+  sortFn: (left: ApiBook, right: ApiBook) => number,
+) => [...source].sort(sortFn).slice(0, limit).map(toCardBook);
+
+const HomeSkeleton = () => (
+  <div className={styles.skeletonGrid} aria-hidden="true">
+    {Array.from({ length: SKELETON_ITEMS }).map((_, index) => (
+      <div key={index} className={styles.skeletonCard} />
+    ))}
+  </div>
+);
 
 export const HomePage = () => {
   const { t } = useTranslation();
   const { isAuthenticated } = useAuth();
 
-  const { data: apiBooks = [] } = useQuery({
-    queryKey: ["books"],
+  const {
+    data: books = [],
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ["home", "books"],
     queryFn: getBooks,
-    retry: false, // Не повторять запрос при ошибке
+    staleTime: 60_000,
   });
 
-  const popularBooks: Book[] = useMemo(() => {
-    // Проверяем, что apiBooks действительно массив и не пустой
-    if (Array.isArray(apiBooks) && apiBooks.length > 0) {
-      return apiBooks.slice(0, 8).map((b) => ({
-        id: b.id,
-        title: b.title,
-        author: b.author,
-        coverUrl: b.coverUrl,
-      }));
-    }
-    return FALLBACK_POPULAR;
-  }, [apiBooks]);
-
-  const newBooksFromApi: Book[] = useMemo(() => {
-    // Проверяем, что apiBooks действительно массив и достаточно длинный
-    if (Array.isArray(apiBooks) && apiBooks.length > 8) {
-      return apiBooks.slice(8, 16).map((b) => ({
-        id: b.id,
-        title: b.title,
-        author: b.author,
-        coverUrl: b.coverUrl,
-      }));
-    }
-    return [];
-  }, [apiBooks]);
-
-  const FALLBACK_NEW: Book[] = [
-    { id: 201, title: "Проект Феникс", author: "Дж. Ким", label: "new" },
-    { id: 202, title: "Второй мозг", author: "Т. Форт", label: "new" },
-    { id: 203, title: "Город женщин", author: "Э. Гилберт" },
-    { id: 204, title: "Идеальный питч", author: "О. Петров" },
-  ];
-  const newBooks = newBooksFromApi.length > 0 ? newBooksFromApi : FALLBACK_NEW;
-
-  const recommended: Book[] = [
-    { id: 301, title: "Шантарам", author: "Г. Д. Робертс", label: "hit" },
-    { id: 302, title: "Краткая история времени", author: "С. Хокинг" },
-    { id: 303, title: "Маркетинг от А до Я", author: "Ф. Котлер", label: "exclusive" },
-    { id: 304, title: "Чистая архитектура", author: "Р. Мартин" },
-  ];
-
-  const continueReading: Book[] = [
-    { id: 401, title: "Бизнес с нуля", author: "Э. Рис", label: "hit" },
-    { id: 402, title: "Дюна", author: "Ф. Герберт" },
-    { id: 403, title: "Сквозь шторм", author: "Н. Гейман" },
-  ];
-
-  const recentViews: Book[] = [
-    { id: 501, title: "Черный лебедь", author: "Н. Талеб" },
-    { id: 502, title: "Искусство мыслить ясно", author: "Р. Добелли" },
-    { id: 503, title: "Поток", author: "М. Чиксентмихайи", label: "exclusive" },
-  ];
+  const { recommendedBooks, popularBooks, recentBooks } = useMemo(
+    () => ({
+      recommendedBooks: pickBooks(books, RAIL_BOOKS_LIMIT, sortByRecommended),
+      popularBooks: pickBooks(books, RAIL_BOOKS_LIMIT, sortByPopular),
+      recentBooks: pickBooks(books, RAIL_BOOKS_LIMIT, sortByRecent),
+    }),
+    [books],
+  );
 
   return (
     <section className={styles.page}>
-      {isAuthenticated ? (
-        <>
-          <BookCarousel
-            title={t("sections.continue")}
-            books={continueReading}
-            isAuthed={isAuthenticated}
-          />
-          <BookCarousel
-            title={t("sections.personal")}
-            books={recommended}
-            isAuthed={isAuthenticated}
-          />
-          <BookCarousel
-            title={t("sections.recent")}
-            books={recentViews}
-            isAuthed={isAuthenticated}
-          />
-        </>
-      ) : null}
+      <header className={styles.header}>
+        <h1>{t("pages.homeTitle")}</h1>
+        <p>{t("home.subtitle")}</p>
+      </header>
 
-      <BookCarousel
-        title={t("sections.popular")}
-        books={popularBooks}
-        isAuthed={isAuthenticated}
-      />
-      <BookCarousel
-        title={t("sections.new")}
-        books={newBooks}
-        isAuthed={isAuthenticated}
-      />
-      <BookCarousel
-        title={t("sections.recommended")}
-        books={recommended}
-        isAuthed={isAuthenticated}
-      />
+      {isLoading ? (
+        <div className={styles.loadingState}>
+          <HomeSkeleton />
+          <HomeSkeleton />
+          <HomeSkeleton />
+        </div>
+      ) : isError ? (
+        <div className={styles.empty}>{t("errors.booksLoad")}</div>
+      ) : (
+        <div className={styles.rails}>
+          <BookCarousel
+            title={t("sections.recommended")}
+            books={recommendedBooks}
+            isAuthed={isAuthenticated}
+            emptyText={t("home.empty")}
+          />
+          <BookCarousel
+            title={t("sections.popular")}
+            books={popularBooks}
+            isAuthed={isAuthenticated}
+            emptyText={t("home.empty")}
+          />
+          <BookCarousel
+            title={t("sections.new")}
+            books={recentBooks}
+            isAuthed={isAuthenticated}
+            emptyText={t("home.empty")}
+          />
+        </div>
+      )}
     </section>
   );
 };
