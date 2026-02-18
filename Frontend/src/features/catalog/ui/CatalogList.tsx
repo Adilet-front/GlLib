@@ -1,251 +1,276 @@
-/**
- * Каталог книг: фильтры (жанр, формат, язык), сортировка, пагинация.
- * Данные через getCatalogBooks (features/catalog/api); карточки — BookCard.
- * Бесплатная библиотека — фильтр по цене не используется.
- */
-import { useMemo, useState } from "react";
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { useEffect, useMemo, useState } from "react";
+import type { FormEvent } from "react";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { useAuth } from "../../auth/model/useAuth";
+import { getCategories } from "../../../entities/category/api/categoryApi";
 import { BookCard, type Book } from "../../../entities/book/ui/BookCard";
-import { Button } from "../../../shared/ui/Button/Button";
-import { Select } from "../../../shared/ui/Select/Select";
+import { useAuth } from "../../auth/model/useAuth";
 import {
   getCatalogBooks,
-  type CatalogFilters,
+  type CatalogBook,
   type CatalogSort,
 } from "../api/catalogApi";
-import { getCategories } from "../../../entities/category/api/categoryApi";
+import { Pagination } from "../../../shared/ui/Pagination/Pagination";
 import styles from "./CatalogList.module.scss";
 
-const PAGE_SIZE = 8;
+const PAGE_SIZE = 12;
+
+type SortOption = {
+  value: CatalogSort;
+  label: string;
+};
+
+const toCardBook = (book: CatalogBook): Book => ({
+  id: book.id,
+  title: book.title,
+  author: book.author,
+  label: book.label,
+  coverUrl: book.coverUrl,
+  averageRating: book.averageRating,
+  reviewCount: book.reviewCount,
+  category: book.category,
+  status: book.status,
+});
+
+const CatalogSkeleton = () => (
+  <div className={styles.skeletonGrid} aria-hidden="true">
+    {Array.from({ length: 8 }).map((_, index) => (
+      <div key={index} className={styles.skeletonCard} />
+    ))}
+  </div>
+);
 
 export const CatalogList = () => {
   const { t } = useTranslation();
   const { isAuthenticated } = useAuth();
-  const [filters, setFilters] = useState<CatalogFilters>({
-    categoryId: undefined,
-    format: "all",
-    language: "all",
-    searchQuery: undefined,
-  });
+  const [searchInput, setSearchInput] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | undefined>(
+    undefined,
+  );
   const [sort, setSort] = useState<CatalogSort>("popular");
   const [page, setPage] = useState(1);
+  const [isCompactPagination, setIsCompactPagination] = useState(false);
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
-  // 1. Fetch Categories
   const { data: categories = [] } = useQuery({
     queryKey: ["categories"],
     queryFn: async () => {
       const { data } = await getCategories();
       return data;
     },
+    staleTime: 60_000,
   });
 
   const {
     data: catalogData,
     isLoading,
     isError,
+    isFetching,
   } = useQuery({
-    queryKey: ["catalog", filters, sort, page],
-    queryFn: () => getCatalogBooks(filters, sort, page, PAGE_SIZE),
+    queryKey: ["catalog", searchQuery, selectedCategoryId, sort, page],
+    queryFn: () =>
+      getCatalogBooks(
+        {
+          format: "all",
+          language: "all",
+          categoryId: selectedCategoryId,
+          searchQuery: searchQuery || undefined,
+        },
+        sort,
+        page,
+        PAGE_SIZE,
+      ),
     placeholderData: keepPreviousData,
   });
 
   const { items = [], total = 0, totalPages = 1 } = catalogData ?? {};
+  const currentPage = Math.min(page, totalPages);
 
-  const books: Book[] = useMemo(
-    () =>
-      items.map((book) => ({
-        id: book.id,
-        title: book.title,
-        author: book.author,
-        label: book.label,
-        coverUrl: book.coverUrl,
-        averageRating: book.averageRating,
-        status: book.status,
-      })),
-    [items],
+  const books: Book[] = items.map(toCardBook);
+
+  const selectedCategoryName = useMemo(
+    () => categories.find((item) => item.id === selectedCategoryId)?.name,
+    [categories, selectedCategoryId],
   );
 
-  const handleFilterChange = (
-    key: keyof CatalogFilters,
-    value: string | number | undefined,
-  ) => {
-    setFilters((prev) => ({ ...prev, [key]: value }));
-    setPage(1);
-  };
-
-  const categoryOptions = useMemo(
-    () => [
-      { value: "all", label: t("catalog.all") },
-      ...categories.map((cat) => ({
-        value: String(cat.id),
-        label: cat.name,
-      })),
-    ],
-    [categories, t],
-  );
-
-  const formatOptions = useMemo(
-    () => [
-      { value: "all", label: t("catalog.all") },
-      { value: "ebook", label: t("catalog.formats.ebook") },
-      { value: "audio", label: t("catalog.formats.audio") },
-    ],
-    [t],
-  );
-
-  const languageOptions = useMemo(
-    () => [
-      { value: "all", label: t("catalog.all") },
-      { value: "ru", label: t("catalog.languages.ru") },
-      { value: "en", label: t("catalog.languages.en") },
-      { value: "kg", label: t("catalog.languages.kg") },
-    ],
-    [t],
-  );
-
-  const sortOptions = useMemo(
+  const sortOptions: SortOption[] = useMemo(
     () => [
       { value: "popular", label: t("catalog.sorts.popular") },
       { value: "rating", label: t("catalog.sorts.rating") },
-      { value: "new", label: "Новинки" },
+      { value: "new", label: t("catalog.sorts.new") },
     ],
     [t],
   );
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const mediaQuery = window.matchMedia("(max-width: 820px)");
+    const applyState = () => setIsCompactPagination(mediaQuery.matches);
+    applyState();
+    mediaQuery.addEventListener("change", applyState);
+    return () => mediaQuery.removeEventListener("change", applyState);
+  }, []);
+
+  const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setSearchQuery(searchInput.trim());
+    setPage(1);
+  };
+
+  const handleReset = () => {
+    setSearchInput("");
+    setSearchQuery("");
+    setSelectedCategoryId(undefined);
+    setSort("popular");
+    setPage(1);
+  };
 
   return (
     <section className={styles.catalog}>
       <header className={styles.header}>
-        <div className={styles.title}>
-          <h1>{t("catalog.title")}</h1>
+        <div>
+          <h1>{t("pages.catalogTitle")}</h1>
           <p>{t("catalog.subtitle")}</p>
         </div>
+        <button
+          type="button"
+          className={styles.filtersToggle}
+          onClick={() => setIsFiltersOpen((prev) => !prev)}
+          aria-expanded={isFiltersOpen}
+        >
+          {t("catalog.filters")}
+        </button>
       </header>
 
       <div className={styles.layout}>
-        <aside className={styles.filters}>
-          <div className={styles.filtersHeader}>
-            <strong>{t("catalog.filters")}</strong>
-            <Button
-              variant="ghost"
-              size="sm"
+        <aside
+          className={styles.sidebar}
+          data-open={isFiltersOpen ? "true" : "false"}
+        >
+          <div className={styles.sidebarBlock}>
+            <h2>{t("catalog.filters")}</h2>
+            <button
               type="button"
-              onClick={() => {
-                setFilters({
-                  categoryId: undefined,
-                  format: "all",
-                  language: "all",
-                });
-                setPage(1);
-              }}
+              className={styles.resetInline}
+              onClick={handleReset}
             >
               {t("catalog.reset")}
-            </Button>
+            </button>
           </div>
-          <Select
-            label={t("catalog.genre")}
-            options={categoryOptions}
-            value={filters.categoryId ? String(filters.categoryId) : "all"}
-            onChange={(event) => {
-              const val = event.target.value;
-              handleFilterChange(
-                "categoryId",
-                val === "all" ? undefined : Number(val),
-              );
-            }}
-          />
-          <Select
-            label={t("catalog.format")}
-            options={formatOptions}
-            value={filters.format}
-            onChange={(event) =>
-              handleFilterChange("format", event.target.value)
-            }
-          />
-          <Select
-            label={t("catalog.language")}
-            options={languageOptions}
-            value={filters.language}
-            onChange={(event) =>
-              handleFilterChange("language", event.target.value)
-            }
-          />
+
+          <div className={styles.sidebarBlock}>
+            <p className={styles.sidebarTitle}>{t("catalog.genre")}</p>
+            <div className={styles.categoryList}>
+              <button
+                type="button"
+                className={
+                  selectedCategoryId === undefined
+                    ? styles.categoryActive
+                    : styles.categoryButton
+                }
+                onClick={() => {
+                  setSelectedCategoryId(undefined);
+                  setPage(1);
+                }}
+              >
+                {t("catalog.all")}
+              </button>
+              {categories.map((category) => (
+                <button
+                  key={category.id}
+                  type="button"
+                  className={
+                    selectedCategoryId === category.id
+                      ? styles.categoryActive
+                      : styles.categoryButton
+                  }
+                  onClick={() => {
+                    setSelectedCategoryId(category.id);
+                    setPage(1);
+                  }}
+                >
+                  {category.name}
+                </button>
+              ))}
+            </div>
+          </div>
         </aside>
 
         <div className={styles.content}>
-          <div className={styles.sortRow}>
-            <div className={styles.count}>
-              {t("catalog.count", { count: total })}
+          <form className={styles.toolbar} onSubmit={handleSearchSubmit}>
+            <label className={styles.searchField}>
+              <span className="sr-only">{t("search.placeholder")}</span>
+              <input
+                type="search"
+                value={searchInput}
+                onChange={(event) => setSearchInput(event.target.value)}
+                placeholder={t("search.placeholder")}
+              />
+            </label>
+
+            <label className={styles.sortField}>
+              <span className="sr-only">{t("catalog.sort")}</span>
+              <select
+                value={sort}
+                onChange={(event) => {
+                  setSort(event.target.value as CatalogSort);
+                  setPage(1);
+                }}
+              >
+                {sortOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <button type="submit" className={styles.searchButton}>
+              {t("search.submitButton")}
+            </button>
+          </form>
+
+          <div className={styles.metaRow}>
+            <div>
+              <span>{t("catalog.count", { count: total })}</span>
+              {selectedCategoryName ? (
+                <span className={styles.metaHint}>{selectedCategoryName}</span>
+              ) : null}
             </div>
-            <Select
-              label={t("catalog.sort")}
-              options={sortOptions}
-              className={styles.sortSelect}
-              value={sort}
-              onChange={(event) => {
-                setSort(event.target.value as CatalogSort);
-                setPage(1);
-              }}
-            />
+            {isFetching && !isLoading ? (
+              <span className={styles.metaHint}>{t("catalog.updating")}</span>
+            ) : null}
           </div>
+
           {isLoading ? (
-            <div className={styles.empty}>Загрузка...</div>
+            <CatalogSkeleton />
           ) : isError ? (
-            <div className={styles.empty}>
-              Не удалось загрузить книги. Проверьте API и попробуйте снова.
-            </div>
+            <div className={styles.empty}>{t("errors.booksLoad")}</div>
           ) : books.length ? (
-            <div className={styles.grid}>
-              {books.map((book, index) => (
-                <div
-                  key={book.id}
-                  className={styles.gridItem}
-                  style={{ animationDelay: `${index * 0.06}s` }}
-                >
-                  <BookCard book={book} isAuthed={isAuthenticated} />
-                </div>
-              ))}
-            </div>
+            <>
+              <div className={styles.grid}>
+                {books.map((book) => (
+                  <BookCard key={book.id} book={book} isAuthed={isAuthenticated} />
+                ))}
+              </div>
+
+              <div className={styles.paginationWrap}>
+                <Pagination
+                  page={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={setPage}
+                  compact={isCompactPagination}
+                  ariaLabel={t("pagination.catalogAria")}
+                />
+              </div>
+            </>
           ) : (
             <div className={styles.empty}>{t("catalog.empty")}</div>
           )}
-          <div className={styles.pagination}>
-            <Button
-              variant="default"
-              size="sm"
-              type="button"
-              onClick={() => setPage((prev) => Math.max(1, prev - 1))}
-              disabled={page === 1}
-            >
-              {t("catalog.prev")}
-            </Button>
-            {Array.from({ length: totalPages }).map((_, index) => {
-              const pageIndex = index + 1;
-              return (
-                <Button
-                  key={pageIndex}
-                  variant={pageIndex === page ? "primary" : "default"}
-                  size="sm"
-                  type="button"
-                  onClick={() => setPage(pageIndex)}
-                >
-                  {pageIndex}
-                </Button>
-              );
-            })}
-            <Button
-              variant="default"
-              size="sm"
-              type="button"
-              onClick={() =>
-                setPage((prev) => Math.min(totalPages, prev + 1))
-              }
-              disabled={page === totalPages}
-            >
-              {t("catalog.next")}
-            </Button>
-          </div>
         </div>
       </div>
     </section>

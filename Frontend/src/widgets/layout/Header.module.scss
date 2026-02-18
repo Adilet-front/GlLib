@@ -2,6 +2,7 @@
   position: sticky;
   top: 0;
   z-index: 12;
+  isolation: isolate;
   background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(14px);
   padding-top: env(safe-area-inset-top, 0px);
@@ -9,19 +10,12 @@
   box-shadow: 0 1px 0 0 rgba(26, 32, 44, 0.06);
 }
 
-.header::after {
-  content: "";
+.headerOverlay {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s ease;
-  z-index: 1;
-}
-
-.header[data-search-open="true"]::after {
-  opacity: 1;
+  background: rgba(15, 23, 42, 0.28);
+  backdrop-filter: blur(2px);
+  z-index: 3;
 }
 
 .row {
@@ -32,6 +26,8 @@
 }
 
 .left {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -80,7 +76,7 @@
   background: var(--surface);
   border: 1px solid var(--border);
   position: relative;
-  z-index: 2;
+  z-index: 4;
 }
 
 .search input {
@@ -180,13 +176,20 @@
   padding: 10px;
   display: grid;
   gap: 6px;
-  z-index: 3;
+  z-index: 5;
+}
+
+.searchEmpty {
+  padding: 8px 10px;
+  color: #7b6b8d;
+  font-size: 0.88rem;
 }
 
 .searchOverlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(15, 23, 42, 0.28);
+  backdrop-filter: blur(2px);
   z-index: 11;
 }
 
@@ -198,10 +201,45 @@
   border-radius: 10px;
   cursor: pointer;
   color: #4b3c5a;
+  display: grid;
+  gap: 4px;
 }
 
 .searchItem:hover {
   background: var(--surface-soft);
+}
+
+.searchItemMain {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.searchItemPrimary {
+  font-weight: 600;
+  color: var(--purple-900);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.searchItemSecondary {
+  font-size: 0.8rem;
+  color: #7b6b8d;
+  min-height: 1em;
+}
+
+.searchItemType {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  border: 1px solid rgba(107, 70, 193, 0.22);
+  background: rgba(159, 122, 234, 0.1);
+  color: var(--primary);
+  padding: 2px 8px;
+  font-size: 0.72rem;
+  font-weight: 600;
 }
 
 .nav {
@@ -227,7 +265,6 @@
 }
 
 .navSummary {
-  list-style: none;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -235,13 +272,17 @@
   padding: 6px 10px;
   border-radius: 999px;
   color: #5a4a6c;
-  border: none;
+  border: 1px solid transparent;
   background: transparent;
   font: inherit;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 
-.navSummary::-webkit-details-marker {
-  display: none;
+.navSummary:hover,
+.navSummary[data-open="true"] {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--primary);
 }
 
 .navMenu {
@@ -258,6 +299,22 @@
   gap: 6px;
   min-width: 170px;
   z-index: 5;
+  transform-origin: top left;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(8px) scale(0.98);
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease,
+    visibility 0.18s ease;
+}
+
+.navMenu[data-open="true"] {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
 }
 
 .navMenu a {
@@ -272,6 +329,8 @@
 }
 
 .actions {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -349,7 +408,6 @@
 }
 
 .profileSummary {
-  list-style: none;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -360,6 +418,13 @@
   border: 1px solid var(--border);
   background: var(--surface);
   font: inherit;
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.profileSummary:hover,
+.profileSummary[data-open="true"] {
+  border-color: rgba(107, 70, 193, 0.42);
+  box-shadow: 0 0 0 1px rgba(107, 70, 193, 0.12);
 }
 
 .profileMeta {
@@ -380,15 +445,12 @@
   letter-spacing: 0.06em;
 }
 
-.profileSummary::-webkit-details-marker {
-  display: none;
-}
-
 .profileAvatar {
   width: 28px;
   height: 28px;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+  object-fit: cover;
 }
 
 .profileDropdown {
@@ -405,6 +467,22 @@
   display: grid;
   gap: 6px;
   z-index: 5;
+  transform-origin: top right;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(8px) scale(0.98);
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease,
+    visibility 0.18s ease;
+}
+
+.profileDropdown[data-open="true"] {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
 }
 
 .profileInfo {
@@ -438,6 +516,9 @@
   text-align: left;
   cursor: pointer;
   font: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .profileDropdown a:hover,
@@ -452,6 +533,34 @@
 
 .profileLogout:hover {
   background: rgba(245, 101, 101, 0.08) !important;
+}
+
+.counterBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--accent-red);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.inlineCounter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: rgba(107, 70, 193, 0.12);
+  color: var(--primary);
+  font-size: 0.72rem;
+  font-weight: 700;
 }
 
 
@@ -729,7 +838,7 @@
     border-bottom: 1px solid var(--border);
   }
 
-  .mobileNav a {
+.mobileNav a {
     text-decoration: none;
     color: var(--purple-900);
     padding: 16px 18px;
@@ -740,6 +849,7 @@
     transition: all 0.2s ease;
     display: flex;
     align-items: center;
+    justify-content: space-between;
   }
 
   .mobileNav a:hover,
@@ -791,6 +901,18 @@
     border-radius: 50%;
     background: linear-gradient(135deg, var(--primary), var(--primary-hover));
     flex-shrink: 0;
+    object-fit: cover;
+  }
+}
+
+@keyframes menu-pop {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 

@@ -1,5 +1,10 @@
 /** Статус экземпляра книги с бэкенда */
-export type BookStatus = "AVAILABLE" | "RESERVED" | "TAKEN" | "RETURNED";
+export type BookStatus =
+  | "AVAILABLE"
+  | "RESERVED"
+  | "TAKEN"
+  | "RETURNED"
+  | "IN_YOUR_HANDS";
 
 /** Модель книги (ответ API /books, /books/:id) */
 export type Book = {

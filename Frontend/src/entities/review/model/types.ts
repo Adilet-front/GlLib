@@ -1,8 +1,7 @@
-/** Модель отзыва о книге */
+/** Модель отзыва (ответ backend /review/{id}/reviews) */
 export type Review = {
-  id: string;
-  bookId: string;
-  userId: string;
+  id: number;
+  userEmail: string;
   rating: number;
   comment?: string;
   createdAt: string;

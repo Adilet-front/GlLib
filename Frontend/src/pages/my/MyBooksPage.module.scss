@@ -8,6 +8,14 @@
   gap: 6px;
 }
 
+.searchInput {
+  max-width: 360px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: 10px 14px;
+}
+
 .statusTabs {
   display: inline-flex;
   gap: 6px;
@@ -58,8 +66,24 @@
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 18px;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.paginationDots {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  height: 34px;
+  color: #7b6b8d;
 }
 
 @media (max-width: 640px) {
@@ -71,6 +95,10 @@
     width: 100%;
   }
 
+  .searchInput {
+    max-width: 100%;
+  }
+
   .tab,
   .tabActive {
     flex: 1;
@@ -80,7 +108,7 @@
   }
 
   .grid {
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
     gap: 14px;
   }
 }
